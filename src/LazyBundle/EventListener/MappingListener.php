@@ -2,7 +2,7 @@
 
 namespace LazyBundle\EventListener;
 
-use Acelaya\Doctrine\Type\PhpEnumType;
+use LazyBundle\DBAL\Types\PhpEnumType;
 use LazyBundle\DBAL\Types\MyPhpEnumType;
 use LazyBundle\Enum\Enum;
 use LazyBundle\Manager\ManagerRegistry;

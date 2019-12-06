@@ -1,9 +1,6 @@
 <?php
-
-
 namespace LazyBundle\DBAL\Types;
 
-use Acelaya\Doctrine\Type\PhpEnumType;
 use LazyBundle\Enum\Enum;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 

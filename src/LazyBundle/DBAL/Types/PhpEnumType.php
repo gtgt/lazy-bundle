@@ -1,7 +1,5 @@
 <?php
-declare(strict_types=1);
-
-namespace LazyBundle\Doctrine\Type;
+namespace LazyBundle\DBAL\Types;
 
 use InvalidArgumentException;
 use Doctrine\DBAL\DBALException;
