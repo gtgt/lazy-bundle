@@ -4,7 +4,7 @@ namespace LazyBundle\Exception;
 use Symfony\Component\Validator\ConstraintViolationListInterface;
 use Symfony\Component\Validator\Exception\ValidatorException;
 
-class EntityValidationFailedException extends ValidatorException {
+class EntityValidationFailedException extends ValidatorException implements ExceptionInterface {
     /**
      * @var object
      */

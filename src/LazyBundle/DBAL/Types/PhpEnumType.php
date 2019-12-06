@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace Acelaya\Doctrine\Type;
+namespace LazyBundle\Doctrine\Type;
 
-use Acelaya\Doctrine\Exception\InvalidArgumentException;
+use InvalidArgumentException;
 use Doctrine\DBAL\DBALException;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Doctrine\DBAL\Types\Type;

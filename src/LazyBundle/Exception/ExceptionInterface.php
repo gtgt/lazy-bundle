@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Acelaya\Doctrine\Exception;
+namespace LazyBundle\Exception;
 
 interface ExceptionInterface extends \Throwable
 {
