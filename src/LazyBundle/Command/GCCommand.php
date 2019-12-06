@@ -2,40 +2,32 @@
 namespace LazyBundle\Command;
 
 use Doctrine\ORM\EntityManager;
+use LazyBundle\Manager\AbstractManager;
+use LazyBundle\Manager\ManagerRegistry;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
-use LazyBundle\Manager\SecurityCheckManager;
-use LazyBundle\Services\Handler;
-use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
+use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class GCCommand extends ContainerAwareCommand implements LoggerAwareInterface {
+class GCCommand extends Command implements LoggerAwareInterface {
     use LoggerAwareTrait;
 
     /**
-     * @param SecurityCheckManager|null $manager
-     * @param Handler|null $handler
+     * @var ManagerRegistry
      */
-    public function __construct(SecurityCheckManager $manager = null, Handler $handler = null) {
-        parent::__construct('security_check:gc');
-    }
+    protected $managerRegistry;
 
-    protected function getManager() {
-        return $this->getContainer()->get(SecurityCheckManager::class);
-    }
-
-
-    protected function getHandler() {
-        return $this->getContainer()->get(Handler::class);
+    public function __construct(ManagerRegistry $managerRegistry = null) {
+        parent::__construct('lazy:gc');
     }
 
     /**
      * {@inheritDoc}
      */
     protected function configure() {
-        $this->setDescription('Garbage collection of security checks, risks and other data. It currently means: expire them after one month.');
+        $this->setDescription('Garbage collection of lazy managers.');
         $this->addOption('dry-run', 'd', InputOption::VALUE_NONE, 'Run GC by not removing anything.');
     }
 
@@ -49,20 +41,22 @@ class GCCommand extends ContainerAwareCommand implements LoggerAwareInterface {
      */
     protected function execute(InputInterface $input, OutputInterface $output) {
         // find garbage processes
-        $manager = $this->getManager();
-        $securityChecks = $manager->findAllGarbage();
-        if ($input->getOption('dry-run')) {
-            foreach ($securityChecks as $check) {
-                $output->writeln((string)$check);
-            }
-            $output->writeln(sprintf('%d security checks would be deleted.', $securityChecks->count()));
-        } else {
-            $manager->transactional(function(EntityManager $em) use ($securityChecks, $manager) {
-                foreach ($securityChecks as $check) {
-                    $manager->delete($check);
+        /** @var AbstractManager $manager */
+        foreach ($this->managerRegistry as $manager) {
+            $garbage = $manager->findAllGarbage();
+            if ($input->getOption('dry-run')) {
+                foreach ($garbage as $check) {
+                    $output->writeln((string)$check);
                 }
-                $this->logger->info(sprintf('Deleted %d security checks.', $securityChecks->count()));
-            });
+                $output->writeln(sprintf('%d entities would be deleted.', $garbage->count()));
+            } else {
+                $manager->transactional(function(EntityManager $em) use ($garbage, $manager) {
+                    foreach ($garbage as $check) {
+                        $manager->delete($check);
+                    }
+                    $this->logger->info(sprintf('Deleted %d entities.', $garbage->count()));
+                });
+            }
         }
     }
 }

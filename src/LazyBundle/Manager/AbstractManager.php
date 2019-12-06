@@ -1,6 +1,7 @@
 <?php
 namespace LazyBundle\Manager;
 
+use Doctrine\Common\Collections\ArrayCollection;
 use LazyBundle\DependencyInjection\Configuration\StrictConfigurationAwareInterface;
 use LazyBundle\Entity\ManagerAwareEntityInterface;
 use LazyBundle\Exception\EntityValidationFailedException;
@@ -578,5 +579,13 @@ abstract class AbstractManager implements StrictConfigurationAwareInterface {
         return $newEntity;
     }
 
+    /**
+     * Return garbage entities
+     *
+     * @return Collection
+     */
+    public function findAllGarbage(): Collection {
+        return new ArrayCollection();
+    }
 
 }

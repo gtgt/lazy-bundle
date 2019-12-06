@@ -21,7 +21,7 @@
         "sort-packages": true
     },
     "autoload": {
-        "psr-4": { "LazyBundle\\": "src/" }
+        "psr-4": { "LazyBundle\\": "src/LazyBundle/" }
     },
     "autoload-dev": {
         "psr-4": { "LazyBundle\\Tests\\": "tests/" }
