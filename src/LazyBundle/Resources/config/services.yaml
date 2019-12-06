@@ -1,0 +1,26 @@
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+        public: true
+        #bind:
+        #    $projectDir: '%kernel.project_dir%'
+
+    _instanceof:
+        Psr\Log\LoggerAwareInterface:
+            tags: ['lazy.logger_aware']
+        LazyBundle\DependencyInjection\Configuration\StrictConfigurationAwareInterface:
+            tags: ['lazy.strict_configuration_aware']
+        LazyBundle\Manager\AbstractManager:
+            tags: ['lazy.manager']
+
+    LazyBundle\:
+        resource: '../../{Controller,Manager,EventListener,Component,Command}'
+
+    # Event Listeners
+    LazyBundle\EventListener\MappingListener:
+        tags:
+            - { name: doctrine.event_listener, event: loadClassMetadata }
+            - { name: doctrine.event_listener, event: onSchemaColumnDefinition }
+            - { name: doctrine.event_listener, event: postLoad, priority: 9999 }
+        arguments: ['@LazyBundle\Manager\ManagerRegistry', ~]

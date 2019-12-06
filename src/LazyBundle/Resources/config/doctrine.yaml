@@ -1,0 +1,21 @@
+# Doctrine Configuration
+doctrine:
+    dbal:
+        schema_filter: "/CHANGE ([^\\s]+)\\s*\\1\\s*MEDIUM(?:TEXT|INT)/"
+        mapping_types:
+            enum: enum
+            blob_text: blob_text
+        types:
+            enum: LazyBundle\DBAL\Types\MyPhpEnumType
+            blob_text: LazyBundle\DBAL\Types\BlobTextType
+
+    orm:
+        dql:
+            numeric_functions:
+                FLOOR: LazyBundle\Query\MysqlFloor
+                IF: LazyBundle\Query\IfFunction
+            string_functions:
+                MATCH_AGAINST: LazyBundle\Query\MatchAgainst
+                REGEXP: LazyBundle\Query\Regexp
+        hydrators:
+            NullUnitOfWorkObjectHydrator : LazyBundle\ORM\Hydration\NullUnitOfWorkObjectHydrator
