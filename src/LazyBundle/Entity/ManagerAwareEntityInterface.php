@@ -10,6 +10,6 @@ use LazyBundle\Manager\AbstractManager;
  * @package LazyBundle\Entity
  * @see MappingListener::postLoad()
  */
-interface ManagerAwareEntityInterface {
+interface ManagerAwareEntityInterface extends EntityInterface {
     public function setManager(AbstractManager $manager);
 }

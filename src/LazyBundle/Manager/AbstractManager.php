@@ -3,6 +3,7 @@ namespace LazyBundle\Manager;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use LazyBundle\DependencyInjection\Configuration\StrictConfigurationAwareInterface;
+use LazyBundle\Entity\EntityInterface;
 use LazyBundle\Entity\ManagerAwareEntityInterface;
 use LazyBundle\Exception\EntityValidationFailedException;
 use LazyBundle\Exception\InvalidManagerArgumentException;
@@ -176,9 +177,9 @@ abstract class AbstractManager implements StrictConfigurationAwareInterface {
     /**
      * Check if entity can be handled by repository of the manager
      *
-     * @param object $entity
+     * @param EntityInterface $entity
      */
-    protected function checkEntityClass(object $entity): void {
+    protected function checkEntityClass(EntityInterface $entity): void {
         $entityClass = $this->getEntityClass();
         // allow proxies...
         if (substr(\get_class($entity), -1 * \strlen($entityClass)) !== $entityClass) {
@@ -386,7 +387,6 @@ abstract class AbstractManager implements StrictConfigurationAwareInterface {
         return $violations;
     }
 
-    /** @noinspection PhpDocMissingThrowsInspection */
     /**
      * @param object|object[] $entity
      * @param int $flags Can be: self::FLAG_VALIDATE, self::FLAG_MERGE, self::FLAG_AUTO_SAVE
@@ -417,12 +417,12 @@ abstract class AbstractManager implements StrictConfigurationAwareInterface {
     }
 
     /**
-     * @param object $entity
+     * @param EntityInterface $entity
      * @param int $flags
      *
      * @throws ORMException
      */
-    public function delete(object $entity, $flags = 0): void {
+    public function delete(EntityInterface $entity, $flags = 0): void {
         $em = $this->getEm();
         foreach (\is_iterable($entity) ? $entity : [$entity] as $object) {
             $this->checkEntityClass($object);
@@ -482,11 +482,11 @@ abstract class AbstractManager implements StrictConfigurationAwareInterface {
     }
 
     /**
-     * @param object $entity
+     * @param EntityInterface $entity
      *
      * @return void
      */
-    public function injectDependency(object $entity): void {
+    public function injectDependency(EntityInterface $entity): void {
         if ($entity instanceof ManagerAwareEntityInterface) {
             $entity->setManager($this);
         }
@@ -505,18 +505,18 @@ abstract class AbstractManager implements StrictConfigurationAwareInterface {
     /**
      * Determines that an enity is new or not (by UnitOfWork state)
      *
-     * @param object $entity
+     * @param EntityInterface $entity
      *
      * @return bool
      */
-    final public function isNewEntity(object $entity): bool {
+    final public function isNewEntity(EntityInterface $entity): bool {
         return $this->getEm()->getUnitOfWork()->getEntityState($entity) === UnitOfWork::STATE_NEW;
     }
 
     /**
-     * @param object $entity
+     * @param EntityInterface $entity
      */
-    public function resetId(object $entity): void {
+    public function resetId(EntityInterface $entity): void {
         $metaData = $this->getClassMetadata();
         foreach ($metaData->getIdentifierFieldNames() as $idFieldName) {
             $entity->{$idFieldName} = null;
@@ -526,30 +526,30 @@ abstract class AbstractManager implements StrictConfigurationAwareInterface {
     /**
      * De-registers (detach) an entity from UnitOfWork
      *
-     * @param object $entity
+     * @param EntityInterface $entity
      */
-    final public function detachEntity(object $entity): void {
+    final public function detachEntity(EntityInterface $entity): void {
         $this->getEm()->detach($entity);
     }
 
     /**
      * Attach (register as managed) an entity into UnitOfWork
      *
-     * @param object $entity
+     * @param EntityInterface $entity
      * @param array $data
      */
-    final public function attachEntity(object $entity, array $data = []): void {
-        $this->getEm()->getUnitOfWork()->registerManaged($entity, ['id' => $entity->getId()], !empty($data) ? $data : $entity->toArray());
+    final public function attachEntity(EntityInterface $entity, array $data = []): void {
+        $this->getEm()->getUnitOfWork()->registerManaged($entity, ['id' => $entity->getId()], !empty($data) ? $data : (array)$entity);
     }
 
     /**
      * Clones an (uow attached) entity into a non-uow attached object
      *
-     * @param object $entity
+     * @param EntityInterface $entity
      *
      * @return object
      */
-    final public function cloneEntity(object $entity) {
+    final public function cloneEntity(EntityInterface $entity) {
 
         $this->checkEntityClass($entity);
 
@@ -570,12 +570,12 @@ abstract class AbstractManager implements StrictConfigurationAwareInterface {
     /**
      * Hookable clone action
      *
-     * @param object $oldEntity
-     * @param object $newEntity
+     * @param EntityInterface $oldEntity
+     * @param EntityInterface $newEntity
      *
      * @return object
      */
-    protected function doCloneEntity(object $oldEntity, object $newEntity) {
+    protected function doCloneEntity(EntityInterface $oldEntity, EntityInterface $newEntity) {
         return $newEntity;
     }
 
