@@ -10,7 +10,7 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
  */
 class ManagerConfigurator {
     /**
-     * @var RegistryInterface
+     * @var DoctrineManagerRegistry
      */
     protected $doctrine;
 

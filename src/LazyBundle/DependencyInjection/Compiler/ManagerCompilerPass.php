@@ -5,16 +5,15 @@ namespace LazyBundle\DependencyInjection\Compiler;
 use LazyBundle\Manager\AbstractManager;
 use LazyBundle\Manager\ManagerConfigurator;
 use LazyBundle\Manager\ManagerRegistry;
-use Symfony\Component\DependencyInjection\ChildDefinition;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Reference;
 
 class ManagerCompilerPass implements CompilerPassInterface {
+    use CompilerPassTrait;
     /**
      * {@inheritdoc}
      *
-     * @throws \ReflectionException
      * @return void
      */
     public function process(ContainerBuilder $container) {
@@ -30,20 +29,7 @@ class ManagerCompilerPass implements CompilerPassInterface {
             if ($definition->isSynthetic()) {
                 continue;
             }
-
-            // resolve classname
-            $className = $container->getParameterBag()->resolveValue($definition->getClass());
-            if (null === $className && $definition instanceof ChildDefinition) {
-                $childDefinition = $definition;
-                do {
-                    $childDefinition = $container->getDefinition($childDefinition->getParent());
-                    $className = $container->getParameterBag()->resolveValue($childDefinition->getClass());
-                } while (null === $className && $childDefinition instanceof ChildDefinition);
-            }
-            if (null === $className) {
-                continue;
-            }
-            if (!$r = $container->getReflectionClass($className)) {
+            if (!$r = $this->getReflectionClass($container, $definition)) {
                 continue;
             }
             if ($r->isSubclassOf(AbstractManager::class)) {

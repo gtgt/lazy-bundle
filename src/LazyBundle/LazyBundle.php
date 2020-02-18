@@ -1,6 +1,7 @@
 <?php
 namespace LazyBundle;
 
+use LazyBundle\DependencyInjection\Compiler\ContainerAwarePass;
 use LazyBundle\DependencyInjection\Compiler\LoggerAwarePass;
 use LazyBundle\DependencyInjection\Compiler\ManagerCompilerPass;
 use LazyBundle\DependencyInjection\Compiler\StrictConfigurationCheckerPass;
@@ -16,6 +17,7 @@ class LazyBundle extends Bundle {
      */
     public function build(ContainerBuilder $container) {
         parent::build($container);
+        $container->addCompilerPass(new ContainerAwarePass());
         $container->addCompilerPass(new LoggerAwarePass());
         $container->addCompilerPass(new ManagerCompilerPass());
         $container->addCompilerPass(new StrictConfigurationCheckerPass());
@@ -28,6 +30,7 @@ class LazyBundle extends Bundle {
     public function boot() {
         parent::boot();
         if ($this->isContainerFresh && $this->container->has(StrictConfigurationChecker::class)) {
+            /** @noinspection NullPointerExceptionInspection */
             $this->container->get(StrictConfigurationChecker::class)->check();
         }
     }

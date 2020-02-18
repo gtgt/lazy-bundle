@@ -1,5 +1,5 @@
 <?php
-namespace LazyBundle\Entity;
+namespace LazyBundle\Entity\Traits;
 
 use LazyBundle\Manager\AbstractManager;
 

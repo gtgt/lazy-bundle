@@ -14,7 +14,7 @@ use MyCLabs\Enum\Enum as BaseEnum;
  *
  * @package LazyBundle\Enum
  */
-class Enum extends BaseEnum {
+abstract class Enum extends BaseEnum {
     /**
      * Enum value
      *
@@ -35,6 +35,9 @@ class Enum extends BaseEnum {
      * @param mixed $value
      *
      * @throws \UnexpectedValueException if incompatible type is given.
+     *
+     * @noinspection MagicMethodsValidityInspection
+     * @noinspection PhpMissingParentConstructorInspection
      */
     public function __construct($value) {
         if (\is_object($value)) {
@@ -68,18 +71,6 @@ class Enum extends BaseEnum {
      */
     public function __toString() {
         return (string)$this->value;
-    }
-
-    /**
-     * Compares one Enum with another.
-     *
-     * This method is final, for more information read https://github.com/myclabs/php-enum/issues/4
-     *
-     * @param self|null $enum
-     * @return bool True if Enums are equal, false if not equal
-     */
-    final public function equals(self $enum = null): bool {
-        return $enum !== null && $this->getValue() === $enum->getValue() && \get_called_class() === \get_class($enum);
     }
 
     /**
