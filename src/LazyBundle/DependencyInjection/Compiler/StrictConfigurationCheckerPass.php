@@ -23,7 +23,7 @@ class StrictConfigurationCheckerPass implements CompilerPassInterface {
             new Reference('validator')
         ]);
         // $parameterBag = $container->getParameterBag();
-        foreach ($container->findTaggedServiceIds('lazy.strict_configuration_aware') as $id) {
+        foreach ($container->findTaggedServiceIds('lazy.strict_configuration_aware') as $id => $tagConfig) {
             if ($container->hasAlias($id)) {
                 // don't brother with aliases. the aliased service will be processed
                 continue;

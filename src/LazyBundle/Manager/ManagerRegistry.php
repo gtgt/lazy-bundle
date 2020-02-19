@@ -2,6 +2,7 @@
 namespace LazyBundle\Manager;
 
 use Doctrine\Common\Collections\ArrayCollection;
+use LazyBundle\Exception\InvalidManagerArgumentException;
 use Symfony\Component\DependencyInjection\ContainerAwareInterface;
 use Symfony\Component\DependencyInjection\ContainerAwareTrait;
 
@@ -15,13 +16,14 @@ class ManagerRegistry extends ArrayCollection implements ContainerAwareInterface
 
     protected function init() {
         foreach ($this as $key => $value) {
-            if (\is_string($value)) {
-                $this->offsetUnset($key);
-                /** @var AbstractManager $manager */
-                $manager = $this->container->get($value);
-                $this->checkValue($manager);
-                $this->set($manager->getEntityClass(), $manager);
+            if ($value instanceof  AbstractManager && !is_numeric($key)) {
+                continue;
             }
+            $this->offsetUnset($key);
+            /** @var AbstractManager $manager */
+            $manager = \is_string($value) ? $this->container->get($value) : $value;
+            $this->checkValue($manager);
+            $this->set($manager->getEntityClass(), $manager);
         }
         $this->initialized = true;
     }
@@ -31,7 +33,7 @@ class ManagerRegistry extends ArrayCollection implements ContainerAwareInterface
      */
     protected function checkValue($value): void {
         if (!$value instanceof AbstractManager) {
-            throw new \InvalidArgumentException(sprintf('Only %s type managers can be registered into %s.', \get_class($value), static::class));
+            throw new InvalidManagerArgumentException(sprintf('Only %s type managers can be registered into %s.', \get_class($value), static::class));
         }
     }
 
@@ -53,7 +55,7 @@ class ManagerRegistry extends ArrayCollection implements ContainerAwareInterface
      * @param AbstractManager $value
      */
     public function set($key, $value) {
-        $this->checkValue($value);
+        $this->initialized = false;
         parent::set($key, $value);
     }
 

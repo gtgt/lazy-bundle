@@ -35,7 +35,7 @@ class ManagerCompilerPass implements CompilerPassInterface {
             if ($r->isSubclassOf(AbstractManager::class)) {
                 $definition->setConfigurator([new Reference(ManagerConfigurator::class), 'configure']);
                 // add to registry
-                $registry->addMethodCall('add', [$id]);
+                $registry->addMethodCall('add', [new Reference($id)]);
             }
         }
     }

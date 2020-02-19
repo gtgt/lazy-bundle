@@ -158,7 +158,7 @@ abstract class AbstractManager implements StrictConfigurationAwareInterface {
      */
     public function getEntityClass(): string {
         if (!$this->entityClass) {
-            $this->entityClass = preg_replace('/\\\(?:Manager|Services)\\\([a-z]+)Manager$/i', '\\Entity\\\$1', static::class);
+            $this->entityClass = preg_replace('/\\\(?:Manager|Services)\\\([a-z\\\]+)Manager$/i', '\\Entity\\\$1', static::class);
         }
         return $this->entityClass;
     }
