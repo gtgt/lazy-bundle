@@ -3,9 +3,9 @@
 namespace LazyBundle\DependencyInjection\Compiler;
 
 use LazyBundle\DependencyInjection\Configuration\StrictConfigurationAwareInterface;
+use LazyBundle\EntityListener\EntityListenerInterface;
 use LazyBundle\Manager\AbstractManager;
 use Psr\Log\LoggerAwareInterface;
-use Symfony\Component\DependencyInjection\ChildDefinition;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerAwareInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -17,21 +17,15 @@ class AutoTagPass implements CompilerPassInterface {
         LoggerAwareInterface::class => 'lazy.logger_aware',
         StrictConfigurationAwareInterface::class => 'lazy.strict_configuration_aware',
         AbstractManager::class => 'lazy.manager',
+        EntityListenerInterface::class => ['doctrine.orm.entity_listener', ['lazy' => true]]
     ];
 
     /**
      * @inheritDoc
      */
     public function process(ContainerBuilder $container) {
-        $instanceof = [];
-        foreach (static::$classesToTag as $class => $tagName) {
-            $instanceof[$class] = (new ChildDefinition(''))->addTag($tagName);
+        foreach (static::$classesToTag as $class => $tag) {
+            $container->registerForAutoconfiguration($class)->addTag(is_array($tag) ? $tag[0] : $tag, is_array($tag) ? $tag[1] : []);
         }
-        foreach ($container->getDefinitions() as $definition) {
-            if (!$definition instanceof ChildDefinition) {
-                $definition->setInstanceofConditionals($definition->getInstanceofConditionals() + $instanceof);
-            }
-        }
-
     }
 }
