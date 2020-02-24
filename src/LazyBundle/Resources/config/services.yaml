@@ -3,13 +3,15 @@ services:
         autowire: true
         autoconfigure: true
         public: true
-        bind:
-            $fileUploaderTargetPath: '%kernel.project_dir%/var/upload'
-            $fileEntityUploadPath: '%kernel.project_dir%/public/upload'
-            $assetsHelper: '@assets.packages'
+#        bind:
+#            $assetsHelper: '@assets.packages'
+    _instanceof:
+        EasyCorp\Bundle\EasyAdminBundle\Form\Type\Configurator\TypeConfiguratorInterface:
+            tags:
+                - { name: 'easyadmin.form.type.configurator' }
 
     LazyBundle\:
-        resource: '../../{Component,Command,Controller,EntityListener,EventListener,Manager,Service}'
+        resource: '../../{Component,Command,Controller,EntityListener,EventListener,Form,Manager,Service}'
 
     # Event Listeners
     LazyBundle\EventListener\MappingListener:
@@ -18,9 +20,3 @@ services:
             - { name: doctrine.event_listener, event: onSchemaColumnDefinition }
             - { name: doctrine.event_listener, event: postLoad, priority: 9999 }
         arguments: ['@LazyBundle\Manager\ManagerRegistry', ~]
-
-    LazyBundle\EntityListener\EasyAdmin\FileEntityListener:
-        tags:
-            - { name: kernel.event_listener, event: easy_admin.pre_remove }
-            - { name: kernel.event_listener, event: easy_admin.pre_update }
-            - { name: kernel.event_listener, event: easy_admin.pre_persist }

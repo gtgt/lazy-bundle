@@ -146,7 +146,7 @@ abstract class AbstractManager implements StrictConfigurationAwareInterface {
     /**
      * @return \Doctrine\Common\Persistence\Mapping\ClassMetadata|ClassMetadata
      */
-    protected function getClassMetadata() {
+    public function getClassMetadata(): ClassMetadata {
         return $this->getEm()->getClassMetadata($this->getEntityClass());
     }
 
