@@ -2,10 +2,11 @@
 
 namespace LazyBundle\Form\Type\Configurator;
 
+use Doctrine\Persistence\ManagerRegistry;
+use Doctrine\ORM\EntityManager;
 use EasyCorp\Bundle\EasyAdminBundle\Form\Filter\Type\ChoiceFilterType;
 use EasyCorp\Bundle\EasyAdminBundle\Form\Type\Configurator\TypeConfiguratorInterface;
 use LazyBundle\Enum\Enum;
-use LazyBundle\Manager\ManagerRegistry;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\FormConfigInterface;
 
@@ -14,13 +15,13 @@ class EnumTypeConfigurator implements TypeConfiguratorInterface {
     /**
      * @var ManagerRegistry
      */
-    protected $managerRegistry;
+    protected $registry;
 
     /**
-     * @param ClassMetadataFactory $managerRegistry
+     * @param ManagerRegistry $registry
      */
-    public function __construct(ManagerRegistry $managerRegistry) {
-        $this->managerRegistry = $managerRegistry;
+    public function __construct(ManagerRegistry $registry) {
+        $this->registry = $registry;
     }
 
 
@@ -31,11 +32,12 @@ class EnumTypeConfigurator implements TypeConfiguratorInterface {
         if (isset($options['choices'])) {
             return $options;
         }
-        $manager = $this->managerRegistry->getManagerForClass($parentConfig->getDataClass());
-        if (!$manager) {
+        /** @var EntityManager $manager */
+        $manager = $this->registry->getManagerForClass($parentConfig->getDataClass());
+        if (!$manager instanceof EntityManager) {
             return $options;
         }
-        $classMetadata = $manager->getClassMetadata();
+        $classMetadata = $manager->getClassMetadata($parentConfig->getDataClass());
         if (!is_a($class = $classMetadata->getTypeOfField($name), Enum::class, true)) {
             return $options;
         }
