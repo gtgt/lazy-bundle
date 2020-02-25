@@ -2,6 +2,7 @@
 
 namespace LazyBundle\Model\Traits;
 
+use LazyBundle\Entity\ManagerAwareEntityInterface;
 use LazyBundle\Model\SerializableInterface;
 
 /**
@@ -131,7 +132,7 @@ trait SerializableTrait {
      * @return array
      */
     protected function getIgnoredSerializableAttributeNames() {
-        return [];
+        return $this instanceof ManagerAwareEntityInterface ? ['manager'] : [];
     }
 
     /**
@@ -152,7 +153,7 @@ trait SerializableTrait {
             $isArray = $isClass = false;
             if (preg_match('/@var\s+(\S+)/', $property->getDocComment(), $m)) {
                 [, $type] = $m;
-                $type = ltrim(ltrim(trim(current(explode('|', $type, 1))), '?'));
+                $type = ltrim(ltrim(trim(current(explode('|', $type, 2))), '?'));
                 if (substr($type, -2) === '[]') {
                     $isArray = true;
                     $type = substr($type, 0, -2);
