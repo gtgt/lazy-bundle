@@ -18,6 +18,14 @@ trait JsonSerializableTrait {
     }
 
     /**
+     * @param $className
+     * @return bool
+     */
+    protected function isSerializableType($className): bool {
+        return false;
+    }
+
+    /**
      * Unserializes the object.
      *
      * @param string $serialized

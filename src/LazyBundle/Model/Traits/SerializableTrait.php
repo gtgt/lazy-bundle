@@ -35,8 +35,8 @@ trait SerializableTrait {
      */
     public function &toArray(): array {
         $data = [];
-        foreach ($this->getSerializableAttributeTypesFromCache() as $name => [$type, $isArray, $isClass]) {
-            if ($isClass) {
+        foreach ($this->getSerializableAttributeTypesFromCache() as $name => [$type, $isArray, $isClass, $serializableByType]) {
+            if ($isClass && !$serializableByType) {
                 if ($isArray) {
                     $data[$name] = [];
                     if (\is_array($this->{$name})) {
@@ -108,7 +108,7 @@ trait SerializableTrait {
         }
     }
 
-    public static function createFromArray(array $data) {
+    public static function createFromArray(array $data): self {
         // maybe this should be done by ReflectionClass, without invoking construct
         $object = new self();
         $object->fromArray($data);
@@ -131,8 +131,17 @@ trait SerializableTrait {
      *
      * @return array
      */
-    protected function getIgnoredSerializableAttributeNames() {
+    protected function getIgnoredSerializableAttributeNames(): array {
         return $this instanceof ManagerAwareEntityInterface ? ['manager'] : [];
+    }
+
+    /**
+     * @param $className
+     *
+     * @return bool
+     */
+    protected function isSerializableType($className): bool {
+        return true;
     }
 
     /**
@@ -150,7 +159,7 @@ trait SerializableTrait {
             if (!\array_key_exists($property->getName(), $attributes)) {
                 continue;
             }
-            $isArray = $isClass = false;
+            $isArray = $isClass = $serializableByType = false;
             if (preg_match('/@var\s+(\S+)/', $property->getDocComment(), $m)) {
                 [, $type] = $m;
                 $type = ltrim(ltrim(trim(current(explode('|', $type, 2))), '?'));
@@ -159,14 +168,19 @@ trait SerializableTrait {
                     $type = substr($type, 0, -2);
                 }
                 if (\in_array($type, ['boolean', 'bool', 'integer', 'int', 'float', 'double', 'string', 'array', 'object', 'callable', 'iterable', 'resource', 'NULL', 'mixed', 'number', 'callback', 'void']) === false) {
-                    $type = $ns.'\\'.$type;
+                    if (strpos($type, '\\') !== 0) {
+                        $type = $ns.'\\'.$type;
+                    }
                     $isClass = true;
+                    if (!is_a($type, SerializableInterface::class, true)) {
+                        $serializableByType = $this->isSerializableType($type);
+                    }
                 }
             } else {
                 $type = 'mixed';
             }
 
-            $attributes[$property->getName()] = [$type, $isArray, $isClass];
+            $attributes[$property->getName()] = [$type, $isArray, $isClass, $serializableByType];
         }
         return $attributes;
     }
