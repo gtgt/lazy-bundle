@@ -15,7 +15,8 @@
     "require": {
         "php": "^7.1",
         "myclabs/php-enum": "^1.7",
-        "symfony/framework-bundle": "^4.4|^5.0"
+        "symfony/framework-bundle": "^4.4|^5.0",
+        "gedmo/doctrine-extensions": "^2.4"
     },
     "config": {
         "preferred-install": "dist",

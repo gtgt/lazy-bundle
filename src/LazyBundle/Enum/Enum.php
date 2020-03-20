@@ -173,14 +173,38 @@ abstract class Enum extends BaseEnum {
     }
 
     /**
+     * @param array $values
+     * @return $this[]
+     */
+    public static function createArray(array $values): array {
+        $array = [];
+        foreach ($values as $value) {
+            $array[] = new static($value);
+        }
+        return $array;
+    }
+
+    /**
      * Creates an enum instance by key (alternative to "new" keyword or magic method)
      *
-     * @param $value
+     * @param $key
      *
      * @return Enum
      */
-    public static function createByKey($value): self {
-        return static::__callStatic($value, []);
+    public static function createByKey($key): self {
+        return static::__callStatic($key, []);
+    }
+
+    /**
+     * @param array $keys
+     * @return $this[]
+     */
+    public static function createArrayByKey(array $keys): array {
+        $array = [];
+        foreach ($keys as $key) {
+            $array[] = static::__callStatic($key, []);
+        }
+        return $array;
     }
 
     /**
