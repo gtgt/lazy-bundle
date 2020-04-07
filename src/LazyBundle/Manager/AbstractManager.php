@@ -30,8 +30,8 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
  *
  * @package LazyBundle\Manager
  *
- * @property EntityManager $em Use getEm() instead!
- * @property EntityManager $_em Use getEm() instead!
+ * @property-read EntityManager $em Use getEm() instead!
+ * @property-read EntityManager $_em Use getEm() instead!
  */
 abstract class AbstractManager implements StrictConfigurationAwareInterface {
 

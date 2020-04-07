@@ -5,7 +5,7 @@ use LazyBundle\Manager\AbstractManager;
 
 trait ManagerAwareEntityTrait {
     /**
-     * @var AbstractManager;
+     * @var AbstractManager
      */
     protected $manager;
 
