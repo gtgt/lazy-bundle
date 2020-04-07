@@ -1,2 +1,4 @@
 /vendor/
 composer.lock
+src/LazyBundle/Resources/public/ckfinder
+src/CKFinder

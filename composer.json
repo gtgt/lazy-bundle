@@ -23,7 +23,10 @@
         "sort-packages": true
     },
     "autoload": {
-        "psr-4": { "LazyBundle\\": "src/LazyBundle/" }
+        "psr-4": {
+            "LazyBundle\\": "src/LazyBundle/",
+            "CKSource\\CKFinder\\": "src/CKFinder/"
+        }
     },
     "autoload-dev": {
         "psr-4": { "LazyBundle\\Tests\\": "tests/" }
