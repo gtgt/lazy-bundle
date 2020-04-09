@@ -9,14 +9,14 @@ services:
         EasyCorp\Bundle\EasyAdminBundle\Form\Type\Configurator\TypeConfiguratorInterface:
             tags:
                 - { name: 'easyadmin.form.type.configurator' }
+        # Doctrine mapping events
+        LazyBundle\EventListener\MappingListener:
+            tags:
+                - { name: kernel.event_listener, event: kernel.request, method: onKernelRequest }
+                - { name: doctrine.event_listener, event: loadClassMetadata }
+                - { name: doctrine.event_listener, event: onSchemaColumnDefinition }
+                - { name: doctrine.event_listener, event: postLoad, priority: 9999 }
+                - { name: kernel.event_listener, event: kernel.terminate, method: onKernelTerminate }
 
     LazyBundle\:
         resource: '../../{Component,Command,Controller,EntityListener,EventListener,Form,Manager,Service}'
-
-    # Event Listeners
-    LazyBundle\EventListener\MappingListener:
-        tags:
-            - { name: doctrine.event_listener, event: loadClassMetadata }
-            - { name: doctrine.event_listener, event: onSchemaColumnDefinition }
-            - { name: doctrine.event_listener, event: postLoad, priority: 9999 }
-        arguments: ['@LazyBundle\Manager\ManagerRegistry', ~]

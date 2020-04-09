@@ -2,13 +2,9 @@
 
 namespace LazyBundle\DependencyInjection;
 
-use Doctrine\Bundle\DoctrineBundle\DependencyInjection\Configuration as DoctrineConfiguration;
 use LazyBundle\EventListener\MappingListener;
-use Symfony\Component\Config\Definition\Processor;
 use Symfony\Component\Config\FileLocator;
-use Symfony\Component\DependencyInjection\Compiler\MergeExtensionConfigurationContainerBuilder;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Symfony\Component\DependencyInjection\Extension\ConfigurationExtensionInterface;
 use Symfony\Component\DependencyInjection\Extension\PrependExtensionInterface;
 use Symfony\Component\DependencyInjection\Loader;
 use Symfony\Component\HttpKernel\DependencyInjection\Extension;
@@ -23,15 +19,17 @@ class LazyExtension extends Extension implements PrependExtensionInterface {
      * {@inheritDoc}
      */
     public function prepend(ContainerBuilder $container) {
-        if ($container->hasExtension('doctrine')) {
-            $extension = $container->getExtension('doctrine');
-            $tmpContainer = new ContainerBuilder();
-            $tmpContainer->registerExtension($extension);
-            $tmpContainer->setResourceTracking($container->isTrackingResources());
-            $loader = new Loader\YamlFileLoader($tmpContainer, new FileLocator(__DIR__.'/../Resources/config'));
-            $loader->load('doctrine.yaml');
-            foreach ($tmpContainer->getExtensionConfig('doctrine') as $config) {
-                $container->prependExtensionConfig('doctrine', $config);
+        $tmpContainer = new ContainerBuilder();
+        $tmpContainer->setResourceTracking($container->isTrackingResources());
+        $loader = new Loader\YamlFileLoader($tmpContainer, new FileLocator(__DIR__.'/../Resources/config'));
+        foreach (['framework', 'doctrine'] as $extensionName) {
+            if ($container->hasExtension($extensionName)) {
+                $extension = $container->getExtension($extensionName);
+                $tmpContainer->registerExtension($extension);
+                $loader->load($extensionName.'.yaml');
+                foreach ($tmpContainer->getExtensionConfig($extensionName) as $config) {
+                    $container->prependExtensionConfig($extensionName, $config);
+                }
             }
         }
     }
@@ -44,6 +42,6 @@ class LazyExtension extends Extension implements PrependExtensionInterface {
         $loader->load('services.yaml');
         $configuration = new Configuration();
         $config = $this->processConfiguration($configuration, $configs);
-        $container->getDefinition(MappingListener::class)->replaceArgument(1, $config['second_level_cache']['entity_names']);
+        $container->getDefinition(MappingListener::class)->addMethodCall('setSlcEntityNames', [$config['second_level_cache']['entity_names']]);
     }
 }
