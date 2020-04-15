@@ -2,6 +2,7 @@
 
 namespace LazyBundle\EventListener;
 
+use Doctrine\DBAL\Types\TypeRegistry;
 use LazyBundle\DBAL\Types\PhpEnumType;
 use LazyBundle\DBAL\Types\MyPhpEnumType;
 use LazyBundle\Enum\Enum;
@@ -102,7 +103,9 @@ class MappingListener {
             });
             $this->initialized = true;
             foreach ($this->registeredEnumTypes as $dbalType => $enumType) {
-                call_user_func($enumType.'::registerEnumType', $dbalType);
+                if (!PhpEnumType::hasType($dbalType)) {
+                    call_user_func($enumType.'::registerEnumType', $dbalType);
+                }
             }
         }
     }
