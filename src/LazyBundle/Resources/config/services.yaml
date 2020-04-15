@@ -3,7 +3,8 @@ services:
         autowire: true
         autoconfigure: true
         public: true
-#        bind:
+        bind:
+            $projectDir: '%kernel.project_dir%'
 #            $assetsHelper: '@assets.packages'
     _instanceof:
         EasyCorp\Bundle\EasyAdminBundle\Form\Type\Configurator\TypeConfiguratorInterface:
@@ -13,6 +14,7 @@ services:
         LazyBundle\EventListener\MappingListener:
             tags:
                 - { name: kernel.event_listener, event: kernel.request, method: onKernelRequest }
+                - { name: kernel.event_listener, event: console.command, method: onConsoleCommand }
                 - { name: doctrine.event_listener, event: loadClassMetadata }
                 - { name: doctrine.event_listener, event: onSchemaColumnDefinition }
                 - { name: doctrine.event_listener, event: postLoad, priority: 9999 }

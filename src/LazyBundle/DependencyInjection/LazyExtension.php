@@ -2,6 +2,7 @@
 
 namespace LazyBundle\DependencyInjection;
 
+use LazyBundle\Command\DeployFtpCommand;
 use LazyBundle\EventListener\MappingListener;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -17,6 +18,8 @@ use Symfony\Component\HttpKernel\DependencyInjection\Extension;
 class LazyExtension extends Extension implements PrependExtensionInterface {
     /**
      * {@inheritDoc}
+     *
+     * @throws \Exception
      */
     public function prepend(ContainerBuilder $container) {
         $tmpContainer = new ContainerBuilder();
@@ -36,6 +39,8 @@ class LazyExtension extends Extension implements PrependExtensionInterface {
 
     /**
      * {@inheritDoc}
+     *
+     * @throws \Exception
      */
     public function load(array $configs, ContainerBuilder $container) {
         $loader = new Loader\YamlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
@@ -43,5 +48,6 @@ class LazyExtension extends Extension implements PrependExtensionInterface {
         $configuration = new Configuration();
         $config = $this->processConfiguration($configuration, $configs);
         $container->getDefinition(MappingListener::class)->addMethodCall('setSlcEntityNames', [$config['second_level_cache']['entity_names']]);
+        $container->getDefinition(DeployFtpCommand::class)->addMethodCall('setConfig', [$config['deploy_ftp']]);
     }
 }

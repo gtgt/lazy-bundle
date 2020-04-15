@@ -13,6 +13,7 @@ use Doctrine\DBAL\Platforms\MySqlPlatform;
 use Doctrine\ORM\Event\LoadClassMetadataEventArgs;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Symfony\Component\Cache\CacheItem;
+use Symfony\Component\Console\Event\ConsoleCommandEvent;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\Event\TerminateEvent;
 use Symfony\Contracts\Cache\CacheInterface;
@@ -71,11 +72,29 @@ class MappingListener {
     }
 
     /**
-     * @param RequestEvent $args
+     * @param string|null $dbalType
+     * @param \Doctrine\DBAL\Platforms\AbstractPlatform $platform
      *
+     * @throws DBALException
+     */
+    protected function registerDbalType(string $dbalType, \Doctrine\DBAL\Platforms\AbstractPlatform $platform): void {
+        if (\is_string($dbalType) && !array_key_exists($dbalType, $this->registeredEnumTypes) && class_exists($dbalType) && is_a($dbalType, Enum::class, TRUE)) {
+            if ($platform instanceof MySqlPlatform) {
+                MyPhpEnumType::registerEnumType($dbalType);
+                $this->registeredEnumTypes[$dbalType] = MyPhpEnumType::class;
+            } else {
+                PhpEnumType::registerEnumType($dbalType);
+                $this->registeredEnumTypes[$dbalType] = PhpEnumType::class;
+            }
+            $this->registeredEnumTypesChanged = true;
+            $platform->markDoctrineTypeCommented(PhpEnumType::getType($dbalType));
+        }
+    }
+
+    /**
      * @throws \Psr\Cache\InvalidArgumentException
      */
-    public function onKernelRequest(RequestEvent $args): void {
+    protected function initialize(): void {
         if (!$this->initialized) {
             $this->registeredEnumTypes += $this->cache->get('enum_types', function(ItemInterface $item, &$save) {
                 $save = false;
@@ -86,6 +105,25 @@ class MappingListener {
                 call_user_func($enumType.'::registerEnumType', $dbalType);
             }
         }
+    }
+
+
+    /**
+     * @param RequestEvent $args
+     *
+     * @throws \Psr\Cache\InvalidArgumentException
+     */
+    public function onKernelRequest(RequestEvent $args): void {
+        $this->initialize();
+    }
+
+    /**
+     * @param ConsoleCommandEvent $event
+     *
+     * @throws \Psr\Cache\InvalidArgumentException
+     */
+    public function onConsoleCommand(ConsoleCommandEvent $event): void {
+        $this->initialize();
     }
 
     /**
@@ -104,16 +142,8 @@ class MappingListener {
 
         foreach ($classMetadata->getFieldNames() as $fieldName) {
             $dbalType = $classMetadata->getTypeOfField($fieldName);
-            if (\is_string($dbalType) && !array_key_exists($dbalType, $this->registeredEnumTypes) && class_exists($dbalType) && is_a($dbalType, Enum::class, TRUE)) {
-                if ($platform instanceof MySqlPlatform) {
-                    MyPhpEnumType::registerEnumType($dbalType);
-                    $this->registeredEnumTypes[$dbalType] = MyPhpEnumType::class;
-                } else {
-                    PhpEnumType::registerEnumType($dbalType);
-                    $this->registeredEnumTypes[$dbalType] = PhpEnumType::class;
-                }
-                $this->registeredEnumTypesChanged = true;
-                $platform->markDoctrineTypeCommented(PhpEnumType::getType($dbalType));
+            if ($dbalType !== null) {
+                $this->registerDbalType($dbalType, $platform);
             }
         }
     }
@@ -143,14 +173,7 @@ class MappingListener {
         $connection = $event->getConnection();
         $platform = $connection->getDatabasePlatform();
         $dbalType = $connection->getSchemaManager()->extractDoctrineTypeFromComment($column['Comment'] ?? '', '');
-        if (\is_string($dbalType) && !PhpEnumType::hasType($dbalType) && class_exists($dbalType) && is_a($dbalType, Enum::class, TRUE)) {
-            if ($platform instanceof MySqlPlatform) {
-                MyPhpEnumType::registerEnumType($dbalType);
-            } else {
-                PhpEnumType::registerEnumType($dbalType);
-            }
-            $platform->markDoctrineTypeCommented(PhpEnumType::getType($dbalType));
-        }
+        $this->registerDbalType($dbalType, $platform);
     }
 
     /**

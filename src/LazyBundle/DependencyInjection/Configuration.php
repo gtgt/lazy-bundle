@@ -1,9 +1,9 @@
-<?php
+<?php /** @noinspection PhpUndefinedMethodInspection */
+
 namespace LazyBundle\DependencyInjection;
 
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
-use Symfony\Component\VarDumper\Dumper\HtmlDumper;
 
 class Configuration implements ConfigurationInterface
 {
@@ -20,6 +20,19 @@ class Configuration implements ConfigurationInterface
                 ->addDefaultsIfNotSet()
                 ->children()
                     ->arrayNode('entity_names')->prototype('scalar')->info('Entity names to configure second level cache automatically (even in vendor).')->defaultValue([])->end()->end()
+                ->end()
+            ->end()
+            ->arrayNode('deploy_ftp')
+                ->useAttributeAsKey('name')
+                ->prototype('array')
+                    ->children()
+                        ->scalarNode('hostname')->isRequired()->end()
+                        ->scalarNode('path')->defaultValue('/')->end()
+                        ->scalarNode('port')->defaultValue(21)->end()
+                        ->scalarNode('user')->defaultNull()->end()
+                        ->scalarNode('password')->defaultNull()->end()
+                        ->scalarNode('exclude_file')->defaultNull()->end()
+                    ->end()
                 ->end()
             ->end()
         ;

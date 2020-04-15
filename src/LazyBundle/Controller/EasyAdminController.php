@@ -28,6 +28,18 @@ class EasyAdminController extends BaseController {
         return new $entityFullyQualifiedClassName();
     }
 
+    protected function persistEntity($entity) {
+        parent::persistEntity($entity);
+    }
+
+    protected function updateEntity($entity) {
+        parent::updateEntity($entity);
+    }
+
+    protected function removeEntity($entity) {
+        parent::removeEntity($entity);
+    }
+
     /**
      * Resorts an item using it's doctrine sortable property
      *
