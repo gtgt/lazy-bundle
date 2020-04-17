@@ -45,8 +45,10 @@ class DeployFtpCommand extends Command {
         $this
             ->setDescription('Deploy the project using LFTP')
             ->addArgument('server', InputArgument::REQUIRED, 'Where you want to deploy your project')
+            ->addOption('symlinks', null, InputOption::VALUE_NONE, 'Create symbolic links, don\'t follow them.')
             ->addOption('go', null, InputOption::VALUE_NONE, 'If set, the task will deploy the project')
-            ->addOption('show-config', null, InputOption::VALUE_NONE, 'If set, task will show your deployment cnfiguration')
+            ->addOption('dry-run', null, InputOption::VALUE_NONE, 'If set, no changes will be made')
+            ->addOption('show-config', null, InputOption::VALUE_NONE, 'If set, task will show your deployment configuration')
             ->addOption('lftp-commands', null, InputOption::VALUE_OPTIONAL, 'If set, it replaces the default LFTP commands: ')
             ->setHelp(<<<EOT
 The <info>deploy:ftp</info> command helps you to deploy your sources in your web server using LFTP.
@@ -99,25 +101,27 @@ EOT
                 $config['password'] = $io->askHidden('Password');
             }
         }
-        $this->showConfig($config, $io);
-        //if just showing config, we show them and we exit
-        if ($input->getOption('show-config')) {
-            return 1;
-        }
 
         $config['local_dir'] = $this->projectDir.'/'; //emplacement local
 
-        $config['lftp-commands'] = $this->defaultLftpOptions;
+        $config['lftp_commands'] = $this->defaultLftpOptions;
 
         if ($input->getOption('lftp-commands')) {
-            $config['lftp-commands'] = $input->getOption('lftp-commands');
+            $config['lftp_commands'] = $input->getOption('lftp-commands');
         }
 
-        $config['verbose'] = '';
-
+        $mirrorOptions = [];
         if ($input->getOption('verbose')) {
-            $config['verbose'] = '--verbose';
+            $mirrorOptions[] = '--verbose';
         }
+        if ($input->getOption('dry-run')) {
+            $mirrorOptions[] = '--dry-run';
+        }
+        if (!$input->getOption('symlinks')) {
+            $mirrorOptions[] = '--dereference --no-symlinks';
+        }
+
+        $config['mirror_options'] = implode(' ', $mirrorOptions);
 
         if (!$input->getOption('go')) {
             if (!$input->isInteractive() || !$io->confirm('Do you confirm deployment?', true)) {
@@ -127,6 +131,11 @@ EOT
             }
         }
 
+        $this->showConfig($config, $io);
+        //if just showing config, we show them and we exit
+        if ($input->getOption('show-config')) {
+            return 1;
+        }
         $ignored_dirs = '';
 
         if (isset($config['exclude_file'])) {
@@ -141,13 +150,15 @@ EOT
             }
         }
         $url = sprintf('ftp://%s:%s@%s:%s', $config['user'], $config['password'], $config['hostname'], $config['port']);
-        $ftpcommand = sprintf('%s open %s; lcd %s; cd %s; mirror --dry-run --overwrite --no-perms --parallel=4 --reverse --delete --no-symlinks %s %s ; quit', $config['lftp-commands'], $url,
-            $config['local_dir'], $config['path'], $config['verbose'], $ignored_dirs);
+
+        $ftpcommand = sprintf('%s open %s; lcd %s; cd %s; mirror --overwrite --no-perms --parallel=4 --reverse --delete %s %s ; quit', $config['lftp_commands'], $url,
+            $config['local_dir'], $config['path'], $config['mirror_options'], $ignored_dirs);
 
         $processHelper = $this->getHelper('process');
-        $regex = '#(get(\s-e)?\s-O|rm(\s-r)?|mkdir|rmdir)\s+'.$url.'/'.trim($config['path'], '/').'(/?[^\s]+)?(?:\s+file:'.$config['local_dir'].'([^\s]+))?#';
+        $regex = '#(get(\s-e)?\s-O|rm(\s-r)?|mkdir|rmdir|ln(\s-s)?)\s+([^\s]+)(?:\s+([^\s]+))?#';
+        $pathStripRegex = '#(?:file:)?/'.trim($config['local_dir'], '/').'|(?:'.$url.')?/'.trim($config['path'], '/').'#';
         $leftover = '';
-        $processHelper->run($output, (new Process(['lftp', '-c', $ftpcommand]))->setTimeout(null), 'Deploy failed :(', static function ($type, $data) use ($io, $regex, &$leftover) {
+        $processHelper->run($output, (new Process(['lftp', '-c', $ftpcommand]))->setTimeout(null), 'Deploy failed :(', static function ($type, $data) use ($io, $url, $config, $regex, $pathStripRegex, &$leftover) {
             if (Process::ERR === $type) {
                 $io->error($data);
             } else {
@@ -163,23 +174,35 @@ EOT
                         $type = $cmd[0];
                         $path = '';
                         $style = null;
+
+                        $pathLeft = $m[5] ?? null ? preg_replace($pathStripRegex, '', $m[5]) : '';
+                        $pathRight = $m[6] ?? null ? preg_replace($pathStripRegex, '', $m[6]) : '';
+                        if (!$data && (strpos($pathLeft, 'ftp:') === 0 || strpos($pathRight, $config['local_dir']) !== false || strpos($pathRight, $config['path']) !== false)) {
+                            $leftover = $line;
+                            continue;
+                        }
                         switch ($type) {
                             case 'get':
                                 $style = 'fg=black;bg=green';
                                 $type = ' ^';
-                                //$path .= ($m[5] ?? null ? $m[5].'<info> >> </info>' : '').($m[1] === '-e' ? '<fg=red>!</>' : '').$m[4];
-                                $path .= $m[5] ?? $m[4];
+                                $path .= $pathRight ?: $pathLeft;
+                                break;
+                            case 'ln':
+                                $style = 'fg=black;bg=yellow';
+                                $type = ' >';
+                                $path .= $pathLeft.($pathRight ? ' <info> >> </info>'.$pathRight : '');
+                                //$path .= $m[5] ?? $m[4];
                                 break;
                             case 'rm':
                             case 'rmdir':
                                 $style = 'fg=white;bg=red';
                                 $type = ($m[3] === '-r' ? '!' : ' ').'-';
-                                $path .= $m[4];
+                                $path .= $pathLeft;
                                 break;
                             case 'mkdir':
                                 $style = 'fg=white;bg=blue';
                                 $type = ' +';
-                                $path .= $m[4];
+                                $path .= $pathLeft;
                                 break;
                         }
                         $io->writeln(($style ? '<'.$style.'> ' : ' ').$type.($style ? ' </> ' : '  ').$path);
@@ -209,7 +232,9 @@ EOT
             ['Port' => $config['port']],
             ['User' => $config['user']],
             ['Password' => str_repeat('*', strlen($config['password']))],
-            ['Exclude File' => $config['exclude_file']]
+            ['Exclude File' => $config['exclude_file']],
+            ['LFTP commands' => $config['lftp_commands']],
+            ['LFTP mirror options' => $config['mirror_options']]
         );
     }
 
