@@ -5,12 +5,8 @@ namespace LazyBundle\Form\Type\Configurator;
 use EasyCorp\Bundle\EasyAdminBundle\Form\Type\Configurator\CollectionTypeConfigurator as BaseConfigurator;
 use EasyCorp\Bundle\EasyAdminBundle\Form\Type\EasyAdminFormType;
 use EasyCorp\Bundle\EasyAdminBundle\Form\Util\FormTypeHelper;
-use Symfony\Bridge\Doctrine\Form\Type\EntityType;
-use Symfony\Component\Form\Event\PostSetDataEvent;
-use Symfony\Component\Form\Event\SubmitEvent;
 use Symfony\Component\Form\Extension\Core\Type\CollectionType;
 use Symfony\Component\Form\FormConfigInterface;
-use Symfony\Component\Form\FormEvents;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 

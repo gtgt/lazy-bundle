@@ -4,6 +4,7 @@ namespace LazyBundle\Controller;
 
 use EasyCorp\Bundle\EasyAdminBundle\Controller\EasyAdminController as BaseController;
 use EasyCorp\Bundle\EasyAdminBundle\Exception\UndefinedEntityException;
+use LazyBundle\Manager\AbstractManager;
 use LazyBundle\Manager\ManagerRegistry;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -22,7 +23,7 @@ class EasyAdminController extends BaseController {
     protected function createNewEntity() {
         $entityFullyQualifiedClassName = $this->entity['class'];
         $manager = $this->registry->getManagerForClass($entityFullyQualifiedClassName);
-        if ($manager) {
+        if ($manager instanceof AbstractManager) {
             return $manager->createNew();
         }
         return new $entityFullyQualifiedClassName();
