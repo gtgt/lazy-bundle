@@ -111,11 +111,13 @@ EOT
         }
 
         $mirrorOptions = [];
-        if ($input->getOption('verbose')) {
-            $mirrorOptions[] = '--verbose';
-        }
+
         if ($input->getOption('dry-run')) {
             $mirrorOptions[] = '--dry-run';
+        } elseif ($input->getOption('verbose')) {
+            $mirrorOptions[] = '--verbose';
+        } else {
+            $mirrorOptions[] = '--log=/dev/stdout';
         }
         if (!$input->getOption('symlinks')) {
             $mirrorOptions[] = '--dereference --no-symlinks';
