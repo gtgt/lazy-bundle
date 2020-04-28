@@ -18,6 +18,9 @@
         "symfony/framework-bundle": "^4.4|^5.0",
         "gedmo/doctrine-extensions": "^2.4"
     },
+    "suggest": {
+        "stof/doctrine-extensions-bundle": "Essential to use all features of gedmo/doctrine-extensions."
+    },
     "config": {
         "preferred-install": "dist",
         "sort-packages": true
@@ -36,4 +39,4 @@
             "dev-master": "1.1-dev"
         }
     }
-}
+},
