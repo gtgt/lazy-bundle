@@ -125,18 +125,18 @@ EOT
 
         $config['mirror_options'] = implode(' ', $mirrorOptions);
 
+        $this->showConfig($config, $io);
+        //if just showing config, we show them and we exit
+        if ($input->getOption('show-config')) {
+            return 1;
+        }
+
         if (!$input->getOption('go')) {
             if (!$input->isInteractive() || !$io->confirm('Do you confirm deployment?', true)) {
                 $io->warning('Command aborted.');
 
                 return 1;
             }
-        }
-
-        $this->showConfig($config, $io);
-        //if just showing config, we show them and we exit
-        if ($input->getOption('show-config')) {
-            return 1;
         }
         $ignored_dirs = '';
 
