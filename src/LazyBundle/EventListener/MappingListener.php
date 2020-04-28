@@ -15,6 +15,7 @@ use Doctrine\ORM\Event\LoadClassMetadataEventArgs;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Symfony\Component\Cache\CacheItem;
 use Symfony\Component\Console\Event\ConsoleCommandEvent;
+use Symfony\Component\Console\Event\ConsoleTerminateEvent;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\Event\TerminateEvent;
 use Symfony\Contracts\Cache\CacheInterface;
@@ -152,11 +153,9 @@ class MappingListener {
     }
 
     /**
-     * @param TerminateEvent $event
-     *
      * @throws \Psr\Cache\InvalidArgumentException
      */
-    public function onKernelTerminate(TerminateEvent $event) {
+    protected function updateCache(): void {
         if ($this->registeredEnumTypesChanged === true) {
             $this->cache->get('enum_types', function(CacheItem $item, &$save) {
                 $save = true;
@@ -164,6 +163,19 @@ class MappingListener {
             }, INF);
         }
         $this->registeredEnumTypesChanged = false;
+    }
+
+    /**
+     * @param TerminateEvent $event
+     *
+     * @throws \Psr\Cache\InvalidArgumentException
+     */
+    public function onKernelTerminate(TerminateEvent $event) {
+        $this->updateCache();
+    }
+
+    public function onConsoleTerminate(ConsoleTerminateEvent $event) {
+        $this->updateCache();
     }
 
     /**

@@ -19,6 +19,7 @@ services:
                 - { name: doctrine.event_listener, event: onSchemaColumnDefinition }
                 - { name: doctrine.event_listener, event: postLoad, priority: 9999 }
                 - { name: kernel.event_listener, event: kernel.terminate, method: onKernelTerminate }
+                - { name: kernel.event_listener, event: console.terminate, method: onConsoleTerminate }
 
     LazyBundle\:
         resource: '../../{Component,Command,Controller,EntityListener,EventListener,Form,Manager,Service}'

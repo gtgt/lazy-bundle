@@ -1,7 +1,7 @@
 # Doctrine Configuration
 doctrine:
     dbal:
-        schema_filter: "/CHANGE ([^\\s]+)\\s*\\1\\s*MEDIUM(?:TEXT|INT)/"
+        #schema_filter: "/CHANGE ([^\\s]+)\\s*\\1\\s*MEDIUM(?:TEXT|INT)/"
         mapping_types:
             enum: enum
             blob_text: blob_text
