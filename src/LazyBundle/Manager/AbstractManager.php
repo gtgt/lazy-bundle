@@ -4,6 +4,7 @@ namespace LazyBundle\Manager;
 use Doctrine\Common\Collections\ArrayCollection;
 use LazyBundle\DependencyInjection\Configuration\StrictConfigurationAwareInterface;
 use LazyBundle\Entity\EntityInterface;
+use LazyBundle\Entity\IdentifiableEntityInterface;
 use LazyBundle\Entity\ManagerAwareEntityInterface;
 use LazyBundle\Exception\EntityValidationFailedException;
 use LazyBundle\Exception\InvalidManagerArgumentException;
@@ -535,10 +536,10 @@ abstract class AbstractManager implements StrictConfigurationAwareInterface {
     /**
      * Attach (register as managed) an entity into UnitOfWork
      *
-     * @param EntityInterface $entity
+     * @param IdentifiableEntityInterface $entity
      * @param array $data
      */
-    final public function attachEntity(EntityInterface $entity, array $data = []): void {
+    final public function attachEntity(IdentifiableEntityInterface $entity, array $data = []): void {
         $this->getEm()->getUnitOfWork()->registerManaged($entity, ['id' => $entity->getId()], !empty($data) ? $data : (array)$entity);
     }
 
