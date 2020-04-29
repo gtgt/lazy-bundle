@@ -464,12 +464,13 @@ abstract class AbstractManager implements StrictConfigurationAwareInterface {
         }
     }
 
-    public function flushCache(): void {
-        if (null !== $cache = $this->getEm()->getCache()) {
+    public function flushCache(bool $onlyMemory = false): void {
+        if ($onlyMemory === false && null !== $cache = $this->getEm()->getCache()) {
             $cache->evictQueryRegions();
             $cache->evictCollectionRegions();
             $cache->evictEntityRegion($this->getEntityClass());
         }
+        $this->getEm()->getUnitOfWork()->clear();
     }
 
     /**
