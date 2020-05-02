@@ -155,7 +155,7 @@ EOT
 
         $ftpcommand = sprintf('%s open %s; lcd %s; cd %s; mirror --overwrite --no-perms --parallel=4 --reverse --delete %s %s ; quit', $config['lftp_commands'], $url,
             $config['local_dir'], $config['path'], $config['mirror_options'], $ignored_dirs);
-
+        // $io->note(sprintf('lftp -c %s', $ftpcommand));
         $processHelper = $this->getHelper('process');
         $regex = '#(get(\s-e)?\s-O|rm(\s-r)?|mkdir|rmdir|ln(\s-s)?)\s+([^\s]+)(?:\s+([^\s]+))?#';
         $pathStripRegex = '#(?:file:)?/'.trim($config['local_dir'], '/').'|(?:'.$url.')?/'.trim($config['path'], '/').'#';
@@ -277,12 +277,11 @@ EOT
             if (!strncmp($path, '#', 1)) {
                 continue;
             }
-            // if starts with *, global exclude
-            if (!strncmp($path, '*', 1)) {
-                $ignored[] = sprintf('--exclude-glob %s', $path);
+            // if starts with ~, it's a regexp
+            if (!strncmp($path, '~', 1)) {
+                $ignored[] = sprintf('--exclude %s', substr($path, 1));
             } else {
-
-                $ignored[] = sprintf('--exclude %s', $path);
+                $ignored[] = sprintf('--exclude-glob %s', $path);
             }
         }
         return implode(' ', $ignored);

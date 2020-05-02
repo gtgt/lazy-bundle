@@ -16,10 +16,7 @@
         "php": "^7.1",
         "myclabs/php-enum": "^1.7",
         "symfony/framework-bundle": "^4.4|^5.0",
-        "gedmo/doctrine-extensions": "^2.4"
-    },
-    "suggest": {
-        "stof/doctrine-extensions-bundle": "Essential to use all features of gedmo/doctrine-extensions."
+        "stof/doctrine-extensions-bundle": "^1.4"
     },
     "config": {
         "preferred-install": "dist",
