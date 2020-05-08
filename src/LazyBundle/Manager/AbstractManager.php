@@ -371,7 +371,7 @@ abstract class AbstractManager implements StrictConfigurationAwareInterface {
     }
 
     /**
-     * @param $entity
+     * @param EntityInterface|EntityInterface[] $entity
      * @param array|null $validationGroups
      *
      * @return ConstraintViolationListInterface
@@ -389,7 +389,7 @@ abstract class AbstractManager implements StrictConfigurationAwareInterface {
     }
 
     /**
-     * @param object|object[] $entity
+     * @param EntityInterface|EntityInterface[] $entity
      * @param int $flags Can be: self::FLAG_VALIDATE, self::FLAG_MERGE, self::FLAG_NO_AUTO_FLUSH, self::FLAG_AUTO_FLUSH_ONLY_ENTITY
      * @param array $options Keys are: self::OPTION_VALIDATION_GROUPS
      *
@@ -418,7 +418,7 @@ abstract class AbstractManager implements StrictConfigurationAwareInterface {
     }
 
     /**
-     * @param EntityInterface $entity
+     * @param EntityInterface|EntityInterface[] $entity
      * @param int $flags
      *
      * @throws ORMException
@@ -435,7 +435,7 @@ abstract class AbstractManager implements StrictConfigurationAwareInterface {
     }
 
     /**
-     * @param null $entity
+     * @param null|EntityInterface|EntityInterface[] $entity
      *
      * @throws ORMException
      */
@@ -452,7 +452,7 @@ abstract class AbstractManager implements StrictConfigurationAwareInterface {
     }
 
     /**
-     * @param null $entity
+     * @param null|EntityInterface|EntityInterface[] $entity
      *
      * @throws ORMException
      */
@@ -464,6 +464,9 @@ abstract class AbstractManager implements StrictConfigurationAwareInterface {
         }
     }
 
+    /**
+     * @param bool $onlyMemory
+     */
     public function flushCache(bool $onlyMemory = false): void {
         if ($onlyMemory === false && null !== $cache = $this->getEm()->getCache()) {
             $cache->evictQueryRegions();
@@ -495,9 +498,9 @@ abstract class AbstractManager implements StrictConfigurationAwareInterface {
     }
 
     /**
-     * @return object
+     * @return EntityInterface
      */
-    public function createNew() {
+    public function createNew(): EntityInterface {
         $class = $this->getEntityClass();
         $entity = new $class();
         $this->injectDependency($entity);
@@ -549,9 +552,9 @@ abstract class AbstractManager implements StrictConfigurationAwareInterface {
      *
      * @param EntityInterface $entity
      *
-     * @return object
+     * @return EntityInterface
      */
-    final public function cloneEntity(EntityInterface $entity) {
+    final public function cloneEntity(EntityInterface $entity): EntityInterface {
 
         $this->checkEntityClass($entity);
 
@@ -575,9 +578,9 @@ abstract class AbstractManager implements StrictConfigurationAwareInterface {
      * @param EntityInterface $oldEntity
      * @param EntityInterface $newEntity
      *
-     * @return object
+     * @return EntityInterface
      */
-    protected function doCloneEntity(EntityInterface $oldEntity, EntityInterface $newEntity) {
+    protected function doCloneEntity(EntityInterface $oldEntity, EntityInterface $newEntity): EntityInterface {
         return $newEntity;
     }
 
