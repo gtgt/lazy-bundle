@@ -466,12 +466,20 @@ abstract class AbstractManager implements StrictConfigurationAwareInterface {
 
     /**
      * @param bool $onlyMemory
+     * @param bool $fullClear
      */
-    public function flushCache(bool $onlyMemory = false): void {
+    public function flushCache(bool $onlyMemory = false, $fullClear = false): void {
         if ($onlyMemory === false && null !== $cache = $this->getEm()->getCache()) {
             $cache->evictQueryRegions();
-            $cache->evictCollectionRegions();
-            $cache->evictEntityRegion($this->getEntityClass());
+            if ($fullClear) {
+                $cache->evictEntityRegions();
+                $cache->evictCollectionRegions();
+            } else {
+                $cache->evictEntityRegion($this->getEntityClass());
+                foreach ($this->getClassMetadata()->getAssociationNames() as $association) {
+                    $cache->evictCollectionRegion($this->getEntityClass(), $association);
+                }
+            }
         }
         $this->getEm()->getUnitOfWork()->clear();
     }
