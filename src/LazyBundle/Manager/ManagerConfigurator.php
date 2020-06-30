@@ -1,6 +1,7 @@
 <?php
 namespace LazyBundle\Manager;
 use Doctrine\Common\Persistence\ManagerRegistry as DoctrineManagerRegistry;
+use LazyBundle\Service\PaginationService;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 /**
@@ -20,14 +21,21 @@ class ManagerConfigurator {
     protected $validator;
 
     /**
+     * @var PaginationService
+     */
+    protected $paginationService;
+
+    /**
      * ManagerConfigurator constructor.
      *
      * @param DoctrineManagerRegistry $doctrine
      * @param ValidatorInterface $validator
+     * @param PaginationService $paginationService
      */
-    public function __construct(DoctrineManagerRegistry $doctrine, ValidatorInterface $validator) {
+    public function __construct(DoctrineManagerRegistry $doctrine, ValidatorInterface $validator, PaginationService $paginationService) {
         $this->doctrine = $doctrine;
         $this->validator = $validator;
+        $this->paginationService = $paginationService;
     }
 
     /**
@@ -36,5 +44,6 @@ class ManagerConfigurator {
     public function configure(AbstractManager $manager): void {
         $manager->setDoctrine($this->doctrine);
         $manager->setValidator($this->validator);
+        $manager->setPaginationService($this->paginationService);
     }
 }

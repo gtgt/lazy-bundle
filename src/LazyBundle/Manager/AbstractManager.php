@@ -2,6 +2,7 @@
 namespace LazyBundle\Manager;
 
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\ORM\Tools\Pagination\Paginator;
 use LazyBundle\DependencyInjection\Configuration\StrictConfigurationAwareInterface;
 use LazyBundle\Entity\EntityInterface;
 use LazyBundle\Entity\IdentifiableEntityInterface;
@@ -21,6 +22,7 @@ use Doctrine\ORM\ORMException;
 use Doctrine\ORM\Query;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\UnitOfWork;
+use LazyBundle\Service\PaginationService;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\Validator\ConstraintViolationList;
 use Symfony\Component\Validator\ConstraintViolationListInterface;
@@ -80,6 +82,11 @@ abstract class AbstractManager implements StrictConfigurationAwareInterface {
      * @var ValidatorInterface
      */
     private $validator;
+
+    /**
+     * @var PaginationService
+     */
+    private $paginationService;
 
     /**
      * @var string
@@ -205,6 +212,20 @@ abstract class AbstractManager implements StrictConfigurationAwareInterface {
     }
 
     /**
+     * @return PaginationService
+     */
+    public function getPaginationService(): PaginationService {
+        return $this->paginationService;
+    }
+
+    /**
+     * @param PaginationService $paginationService
+     */
+    public function setPaginationService(PaginationService $paginationService): void {
+        $this->paginationService = $paginationService;
+    }
+
+    /**
      * Creates a new QueryBuilder instance that is prepopulated for this entity name.
      *
      * @param string $alias
@@ -325,6 +346,23 @@ abstract class AbstractManager implements StrictConfigurationAwareInterface {
             return $this->getRepository()->matching($criteria);
         }
         throw new \BadMethodCallException(sprintf('%s not implemented.', __METHOD__));
+    }
+
+    /**
+     * Create paginated result from Criteria.
+     *
+     * @param Criteria $criteria
+     * @param int $limit
+     * @param string|null $alias
+     * @param string|null $indexBy
+     *
+     * @return Paginator
+     *
+     * @throws Query\QueryException
+     */
+    public function matchingPaginator(Criteria $criteria, $limit = 10, string $alias = null, string $indexBy = null): Paginator {
+        $queryBuilder = $this->createQueryBuilder($alias, $indexBy)->addCriteria($criteria);
+        return $this->getPaginationService()->paginate($queryBuilder, $limit);
     }
 
     /**
