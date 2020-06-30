@@ -22,6 +22,7 @@ class Configuration implements ConfigurationInterface
                     ->arrayNode('entity_names')->prototype('scalar')->info('Entity names to configure second level cache automatically (even in vendor).')->defaultValue([])->end()->end()
                 ->end()
             ->end()
+            ->arrayNode('dql_extensions')->enumPrototype()->values(['mysql', 'oracle', 'postgres', 'sqlite'])->end()->end()
             ->arrayNode('deploy_ftp')
                 ->useAttributeAsKey('name')
                 ->prototype('array')

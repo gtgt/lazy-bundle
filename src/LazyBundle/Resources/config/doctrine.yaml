@@ -10,12 +10,5 @@ doctrine:
             blob_text: LazyBundle\DBAL\Types\BlobTextType
 
     orm:
-        dql:
-            numeric_functions:
-                FLOOR: LazyBundle\Query\MysqlFloor
-                IF: LazyBundle\Query\IfFunction
-            string_functions:
-                MATCH_AGAINST: LazyBundle\Query\MatchAgainst
-                REGEXP: LazyBundle\Query\Regexp
         hydrators:
             NullUnitOfWorkObjectHydrator : LazyBundle\ORM\Hydration\NullUnitOfWorkObjectHydrator

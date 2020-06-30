@@ -30,6 +30,19 @@ class LazyExtension extends Extension implements PrependExtensionInterface {
                 $extension = $container->getExtension($extensionName);
                 $tmpContainer->registerExtension($extension);
                 $loader->load($extensionName.'.yaml');
+
+            }
+        }
+        if ($container->hasExtension('doctrine')) {
+            $configs = $container->getExtensionConfig('lazy');
+            while ($config = array_shift($configs)) {
+                foreach ($config['dql_extensions'] as $dqlExtensionPack) {
+                    $loader->load('../../../../../../beberlei/doctrineextensions/config/'.$dqlExtensionPack.'.yml');
+                }
+            }
+        }
+        foreach (['framework', 'doctrine'] as $extensionName) {
+            if ($tmpContainer->hasExtension($extensionName)) {
                 foreach ($tmpContainer->getExtensionConfig($extensionName) as $config) {
                     $container->prependExtensionConfig($extensionName, $config);
                 }
