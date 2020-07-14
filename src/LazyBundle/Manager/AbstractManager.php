@@ -408,6 +408,10 @@ abstract class AbstractManager implements StrictConfigurationAwareInterface {
         }
     }
 
+    public function setBufferedQueryUse(bool $enable) {
+        $this->getEm()->getConnection()->getWrappedConnection()->setAttribute(\PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, $enable);
+    }
+
     /**
      * @param EntityInterface|EntityInterface[] $entity
      * @param array|null $validationGroups
@@ -519,7 +523,7 @@ abstract class AbstractManager implements StrictConfigurationAwareInterface {
                 }
             }
         }
-        $this->getEm()->getUnitOfWork()->clear();
+        $this->getEm()->clear($fullClear ? null : $this->getEntityClass());
     }
 
     /**
