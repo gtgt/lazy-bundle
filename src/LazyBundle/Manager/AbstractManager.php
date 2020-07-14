@@ -507,7 +507,7 @@ abstract class AbstractManager implements StrictConfigurationAwareInterface {
      * @param bool $fullClear
      */
     public function flushCache(bool $onlyMemory = false, $fullClear = false): void {
-        if ($onlyMemory === false && null !== $cache = $this->getEm()->getCache()) {
+        if ($onlyMemory === false && (null !== $cache = $this->getEm()->getCache())) {
             $cache->evictQueryRegions();
             if ($fullClear) {
                 $cache->evictEntityRegions();

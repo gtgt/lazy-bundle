@@ -155,7 +155,9 @@ EOT
 
         $ftpcommand = sprintf('%s open %s; lcd %s; cd %s; mirror --overwrite --no-perms --parallel=4 --reverse --delete %s %s ; quit', $config['lftp_commands'], $url,
             $config['local_dir'], $config['path'], $config['mirror_options'], $ignored_dirs);
-        // $io->note(sprintf('lftp -c %s', $ftpcommand));
+        if ($input->getOption('verbose')) {
+            $io->note(sprintf('lftp -c %s', $ftpcommand));
+        }
         $processHelper = $this->getHelper('process');
         $regex = '#(get(\s-e)?\s-O|rm(\s-r)?|mkdir|rmdir|ln(\s-s)?)\s+([^\s]+)(?:\s+([^\s]+))?#';
         $pathStripRegex = '#(?:file:)?/'.trim($config['local_dir'], '/').'|(?:'.$url.')?/'.trim($config['path'], '/').'#';
