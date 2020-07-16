@@ -401,14 +401,24 @@ abstract class AbstractManager implements StrictConfigurationAwareInterface {
      * Checks database connection by ping and reconnects if necessary
      */
     public function checkConnection(): void {
-        $em = $this->getEm();
-        if ($em->getConnection()->ping() === false) {
-            $em->getConnection()->close();
-            $em->getConnection()->connect();
+        $connection = $this->getEm()->getConnection();
+        if ($connection->isConnected() !== true || $connection->ping() !== true) {
+            $connection->close();
+            $connection->connect();
         }
     }
 
-    public function setBufferedQueryUse(bool $enable) {
+    /**
+     * Closes connection
+     */
+    public function closeConnection(): void {
+        $this->getEm()->getConnection()->close();
+    }
+
+    /**
+     * @param bool $enable
+     */
+    public function setBufferedQueryUse(bool $enable): void {
         $this->getEm()->getConnection()->getWrappedConnection()->setAttribute(\PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, $enable);
     }
 

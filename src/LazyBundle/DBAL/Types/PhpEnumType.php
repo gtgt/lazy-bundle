@@ -99,6 +99,9 @@ class PhpEnumType extends Type {
     public static function registerEnumType($typeNameOrEnumClass, $enumClass = null): void {
         $typeName = $typeNameOrEnumClass;
         $enumClass = $enumClass ?: $typeNameOrEnumClass;
+        if (self::getTypeRegistry()->has($typeName)) {
+            return;
+        }
 
         if (!\is_subclass_of($enumClass, Enum::class)) {
             throw new InvalidArgumentException(\sprintf(
