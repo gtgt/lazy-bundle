@@ -134,6 +134,7 @@ class MappingListener {
      * @param LoadClassMetadataEventArgs $eventArgs
      *
      * @throws DBALException
+     * @throws \Psr\Cache\InvalidArgumentException
      */
     public function loadClassMetadata(LoadClassMetadataEventArgs $eventArgs): void {
         $classMetadata = $eventArgs->getClassMetadata();
@@ -150,6 +151,7 @@ class MappingListener {
                 $this->registerDbalType($dbalType, $platform);
             }
         }
+        $this->updateCache();
     }
 
     /**
