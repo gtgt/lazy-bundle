@@ -416,6 +416,13 @@ abstract class AbstractManager implements StrictConfigurationAwareInterface {
     }
 
     /**
+     * Is Em closed?
+     */
+    public function isClosed(): bool {
+        return !$this->getEm()->isOpen();
+    }
+
+    /**
      * @param bool $enable
      */
     public function setBufferedQueryUse(bool $enable): void {
