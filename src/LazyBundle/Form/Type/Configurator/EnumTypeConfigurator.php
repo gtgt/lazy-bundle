@@ -2,9 +2,8 @@
 
 namespace LazyBundle\Form\Type\Configurator;
 
-use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\ORM\EntityManager;
-use EasyCorp\Bundle\EasyAdminBundle\Form\Filter\Type\ChoiceFilterType;
+use Doctrine\Persistence\ManagerRegistry;
 use EasyCorp\Bundle\EasyAdminBundle\Form\Type\Configurator\TypeConfiguratorInterface;
 use LazyBundle\Enum\Enum;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
@@ -32,17 +31,24 @@ class EnumTypeConfigurator implements TypeConfiguratorInterface {
         if (isset($options['choices'])) {
             return $options;
         }
+        $enumClass = null;
         /** @var EntityManager $manager */
-        $manager = $this->registry->getManagerForClass($parentConfig->getDataClass());
-        if (!$manager instanceof EntityManager) {
+        $entityClass = $parentConfig->getDataClass();
+        if ($entityClass) {
+            $manager = $this->registry->getManagerForClass($entityClass);
+            if ($manager instanceof EntityManager) {
+                $classMetadata = $manager->getClassMetadata($entityClass);
+                $enumClass = $classMetadata->getTypeOfField($name);
+            }
+        }
+        if (!$enumClass && class_exists($metadata['type'])) {
+            $enumClass = $metadata['type'];
+        }
+        if (!is_a($enumClass, Enum::class, true)) {
             return $options;
         }
-        $classMetadata = $manager->getClassMetadata($parentConfig->getDataClass());
-        if (!is_a($class = $classMetadata->getTypeOfField($name), Enum::class, true)) {
-            return $options;
-        }
-        /** @var Enum $class */
-        $options['choices'] = array_combine($class::toArray(), $class::values());
+        /** @var Enum $enumClass */
+        $options['choices'] = array_combine($enumClass::toArray(), $enumClass::values());
 
         $options['choice_value'] = 'value';
         $options['choice_label'] = function(?Enum $enum) {
@@ -59,6 +65,9 @@ class EnumTypeConfigurator implements TypeConfiguratorInterface {
      * {@inheritdoc}
      */
     public function supports($type, array $options, array $metadata): bool {
+        if (class_exists($type) && is_a($type, Enum::class, true)) {
+            return true;
+        }
         return \in_array($type, ['choice', ChoiceType::class], true);
     }
 }
