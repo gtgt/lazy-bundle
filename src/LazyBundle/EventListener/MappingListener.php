@@ -2,7 +2,8 @@
 
 namespace LazyBundle\EventListener;
 
-use Doctrine\DBAL\Types\TypeRegistry;
+use Doctrine\DBAL\Connection;
+use Doctrine\Persistence\ManagerRegistry as DoctrineManagerRegistry;
 use LazyBundle\DBAL\Types\PhpEnumType;
 use LazyBundle\DBAL\Types\MyPhpEnumType;
 use LazyBundle\Enum\Enum;
@@ -27,6 +28,11 @@ class MappingListener {
      * @var ManagerRegistry
      */
     protected $managerRegistry;
+
+    /**
+     * @var DoctrineManagerRegistry
+     */
+    protected $doctrineRegistry;
 
     /**
      * Entity names to autoconfigure second level cache
@@ -59,10 +65,12 @@ class MappingListener {
      * MappingListener constructor.
      *
      * @param ManagerRegistry $managerRegistry
+     * @param DoctrineManagerRegistry $doctrineRegistry
      * @param CacheInterface $enumTypeCache
      */
-    public function __construct(ManagerRegistry $managerRegistry, CacheInterface $enumTypeCache) {
+    public function __construct(ManagerRegistry $managerRegistry, DoctrineManagerRegistry $doctrineRegistry, CacheInterface $enumTypeCache) {
         $this->managerRegistry = $managerRegistry;
+        $this->doctrineRegistry = $doctrineRegistry;
         $this->cache = $enumTypeCache;
     }
 
@@ -75,26 +83,33 @@ class MappingListener {
 
     /**
      * @param string|null $dbalType
-     * @param \Doctrine\DBAL\Platforms\AbstractPlatform $platform
+     * @param bool $useKey
+     * @param \Doctrine\DBAL\Platforms\AbstractPlatform|null $platform
      *
      * @throws DBALException
      */
-    protected function registerDbalType(string $dbalType, \Doctrine\DBAL\Platforms\AbstractPlatform $platform): void {
+
+    protected function registerDbalType(string $dbalType, bool $useKey = false, \Doctrine\DBAL\Platforms\AbstractPlatform $platform = null): void {
         if (\is_string($dbalType) && !array_key_exists($dbalType, $this->registeredEnumTypes) && class_exists($dbalType) && is_a($dbalType, Enum::class, TRUE)) {
+            /** @var PhpEnumType $type */
             if ($platform instanceof MySqlPlatform) {
-                MyPhpEnumType::registerEnumType($dbalType);
-                $this->registeredEnumTypes[$dbalType] = MyPhpEnumType::class;
+                MyPhpEnumType::registerEnumType($dbalType, null, $useKey);
+                $type = MyPhpEnumType::getType($dbalType);
             } else {
-                PhpEnumType::registerEnumType($dbalType);
-                $this->registeredEnumTypes[$dbalType] = PhpEnumType::class;
+                PhpEnumType::registerEnumType($dbalType, null, $useKey);
+                $type = PhpEnumType::getType($dbalType);
             }
+            $this->registeredEnumTypes[$dbalType] = $type;
             $this->registeredEnumTypesChanged = true;
-            $platform->markDoctrineTypeCommented(PhpEnumType::getType($dbalType));
+            if ($platform !== null) {
+                $platform->markDoctrineTypeCommented($type);
+            }
         }
     }
 
     /**
      * @throws \Psr\Cache\InvalidArgumentException
+     * @throws DBALException
      */
     protected function initialize(): void {
         if (!$this->initialized) {
@@ -103,9 +118,21 @@ class MappingListener {
                 return [];
             });
             $this->initialized = true;
-            foreach ($this->registeredEnumTypes as $dbalType => $enumType) {
-                if (!PhpEnumType::hasType($dbalType)) {
-                    call_user_func($enumType.'::registerEnumType', $dbalType);
+            $platforms = [];
+            /** @var Connection $connection */
+            foreach ($this->doctrineRegistry->getConnections() as $connection) {
+                $platform = $connection->getDatabasePlatform();
+                if ($platform !== null) {
+                    $platforms[$platform->getName()] = $platform;
+                }
+            }
+            /** @var PhpEnumType $type */
+            foreach ($this->registeredEnumTypes as $dbalTypeName => $type) {
+                if (!PhpEnumType::hasType($dbalTypeName)) {
+                    call_user_func(get_class($type).'::registerEnumType', $dbalTypeName, null, $type->isUseKey());
+                    foreach ($platforms as $platform) {
+                        $platform->markDoctrineTypeCommented($dbalTypeName);
+                    }
                 }
             }
         }
@@ -133,8 +160,7 @@ class MappingListener {
     /**
      * @param LoadClassMetadataEventArgs $eventArgs
      *
-     * @throws DBALException
-     * @throws \Psr\Cache\InvalidArgumentException
+     * @throws DBALException|\Psr\Cache\InvalidArgumentException|\Doctrine\ORM\Mapping\MappingException
      */
     public function loadClassMetadata(LoadClassMetadataEventArgs $eventArgs): void {
         $classMetadata = $eventArgs->getClassMetadata();
@@ -148,7 +174,8 @@ class MappingListener {
         foreach ($classMetadata->getFieldNames() as $fieldName) {
             $dbalType = $classMetadata->getTypeOfField($fieldName);
             if ($dbalType !== null) {
-                $this->registerDbalType($dbalType, $platform);
+                $fieldMapping = $classMetadata->getFieldMapping($fieldName);
+                $this->registerDbalType($dbalType, !empty($fieldMapping['options']['useKey']), $platform);
             }
         }
         $this->updateCache();
@@ -181,6 +208,8 @@ class MappingListener {
     }
 
     /**
+     * @deprecated not in use due to $useKey option can't be figured out. Registration is done at startup anyway.
+     *
      * @param SchemaColumnDefinitionEventArgs $event
      *
      * @throws DBALException
@@ -189,8 +218,13 @@ class MappingListener {
         $column = $event->getTableColumn();
         $connection = $event->getConnection();
         $platform = $connection->getDatabasePlatform();
-        $dbalType = $connection->getSchemaManager()->extractDoctrineTypeFromComment($column['Comment'] ?? '', '');
-        $this->registerDbalType($dbalType, $platform);
+        $schemaManager = $connection->getSchemaManager();
+        if ($schemaManager !== null) {
+            $dbalType = $schemaManager->extractDoctrineTypeFromComment($column['Comment'] ?? '', '');
+            if (!empty($dbalType)) {
+                $this->registerDbalType($dbalType, false, $platform);
+            }
+        }
     }
 
     /**

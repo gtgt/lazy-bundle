@@ -16,7 +16,7 @@ services:
                 - { name: kernel.event_listener, event: kernel.request, method: onKernelRequest }
                 - { name: kernel.event_listener, event: console.command, method: onConsoleCommand }
                 - { name: doctrine.event_listener, event: loadClassMetadata }
-                - { name: doctrine.event_listener, event: onSchemaColumnDefinition }
+                #- { name: doctrine.event_listener, event: onSchemaColumnDefinition }
                 - { name: doctrine.event_listener, event: postLoad, priority: 9999 }
                 - { name: kernel.event_listener, event: kernel.terminate, method: onKernelTerminate }
                 - { name: kernel.event_listener, event: console.terminate, method: onConsoleTerminate }

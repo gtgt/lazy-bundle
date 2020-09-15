@@ -20,7 +20,7 @@ class MyPhpEnumType extends PhpEnumType {
      * {@inheritDoc}
      */
     public function getSQLDeclaration(array $fieldDeclaration, AbstractPlatform $platform): string {
-        $values = \call_user_func([$this->enumClass, 'toArray']);
+        $values = \call_user_func([$this->enumClass, $this->useKey ? 'keys' : 'toArray']);
         return \sprintf('ENUM(\'%s\')', \implode('\', \'', $values));
     }
 }

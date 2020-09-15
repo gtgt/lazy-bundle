@@ -11,11 +11,21 @@ class PhpEnumType extends Type {
     /**
      * @var string
      */
-    private $name;
+    protected $name;
+
     /**
      * @var string
      */
     protected $enumClass = Enum::class;
+
+    /**
+     * @var bool
+     */
+    protected $useKey = false;
+
+    public function __sleep() {
+        return ['name', 'enumClass', 'useKey'];
+    }
 
     /**
      * Gets the name of this type.
@@ -24,6 +34,20 @@ class PhpEnumType extends Type {
      */
     public function getName() {
         return $this->name ?: 'enum';
+    }
+
+    /**
+     * @return bool
+     */
+    public function isUseKey(): bool {
+        return $this->useKey;
+    }
+
+    /**
+     * @return string
+     */
+    public function getEnumClass(): string {
+        return $this->enumClass;
     }
 
     /**
@@ -50,19 +74,19 @@ class PhpEnumType extends Type {
         }
 
         // If the enumeration provides a casting method, apply it
-        if (\method_exists($this->enumClass, 'castValueIn')) {
+        if (\method_exists($this->enumClass, $this->useKey ? 'castKeyIn' : 'castValueIn')) {
             /** @var callable $castValueIn */
-            $castValueIn = [$this->enumClass, 'castValueIn'];
+            $castValueIn = [$this->enumClass, $this->useKey ? 'castKeyIn' : 'castValueIn'];
             $value = $castValueIn($value);
         }
 
         // Check if the value is valid for this enumeration
         /** @var callable $isValidCallable */
-        $isValidCallable = [$this->enumClass, 'isValid'];
+        $isValidCallable = [$this->enumClass, $this->useKey ? 'isValidKey' : 'isValid'];
         $isValid = $isValidCallable($value);
         if (!$isValid) {
             /** @var callable $toArray */
-            $toArray = [$this->enumClass, 'toArray'];
+            $toArray = [$this->enumClass, $this->useKey ? 'keys' : 'toArray'];
             throw new InvalidArgumentException(\sprintf(
                 'The value "%s" is not valid for the enum "%s". Expected one of ["%s"]',
                 $value,
@@ -71,32 +95,33 @@ class PhpEnumType extends Type {
             ));
         }
 
-        return new $this->enumClass($value);
+        return $this->useKey ? call_user_func([$this->enumClass, 'createByKey'], $value) : new $this->enumClass($value);
     }
 
     public function convertToDatabaseValue($value, AbstractPlatform $platform) {
-        if ($value === null) {
+        if ($value === null || !$value instanceof Enum) {
             return null;
         }
 
         // If the enumeration provides a casting method, apply it
-        if (\method_exists($this->enumClass, 'castValueOut')) {
+        if (\method_exists($this->enumClass, $this->useKey ? 'castKeyOut' : 'castValueOut')) {
             /** @var callable $castValueOut */
-            $castValueOut = [$this->enumClass, 'castValueOut'];
+            $castValueOut = [$this->enumClass, $this->useKey ? 'castKeyOut' : 'castValueOut'];
             return $castValueOut($value);
         }
 
         // Otherwise, cast to string
-        return (string)$value;
+        return $this->useKey ? $value->getKey() : $value->getValue();
     }
 
     /**
      * @param string $typeNameOrEnumClass
      * @param string|null $enumClass
-     * @throws InvalidArgumentException
+     * @param bool $useKey
+     *
      * @throws DBALException
      */
-    public static function registerEnumType($typeNameOrEnumClass, $enumClass = null): void {
+    public static function registerEnumType($typeNameOrEnumClass, $enumClass = null, $useKey = false): void {
         $typeName = $typeNameOrEnumClass;
         $enumClass = $enumClass ?: $typeNameOrEnumClass;
         if (self::getTypeRegistry()->has($typeName)) {
@@ -117,6 +142,7 @@ class PhpEnumType extends Type {
         $type = self::getType($typeName);
         $type->name = $typeName;
         $type->enumClass = $enumClass;
+        $type->useKey = $useKey;
     }
 
     /**
