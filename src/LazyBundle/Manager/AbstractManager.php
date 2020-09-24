@@ -452,7 +452,7 @@ abstract class AbstractManager implements StrictConfigurationAwareInterface {
      * @param int $flags Can be: self::FLAG_VALIDATE, self::FLAG_MERGE, self::FLAG_NO_AUTO_FLUSH, self::FLAG_AUTO_FLUSH_ONLY_ENTITY
      * @param array $options Keys are: self::OPTION_VALIDATION_GROUPS
      *
-     * @throws ORMException
+     * @throws ORMException|EntityValidationFailedException
      */
     public function save($entity, $flags = 0, $options = []): void {
         $em = $this->getEm();

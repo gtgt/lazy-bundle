@@ -26,9 +26,9 @@ class EntityValidationFailedException extends ValidatorException implements Exce
         $this->violations = $violations;
         try {
             $violation = $violations->get(0);
-            parent::__construct(sprintf('Validation failed on entity (%s): %s', (string)$entity, $violation->getMessage()), $violation->getCode());
+            parent::__construct(sprintf('Validation failed on entity%s->%s: %s', method_exists($entity, '__toString') ? '['.$entity.']' : '', $violation->getPropertyPath(), $violation->getMessage()), (int)$violation->getCode());
         } catch (\OutOfBoundsException $e) {
-            parent::__construct(sprintf('Validation failed on entity (%s)', (string)$entity));
+            parent::__construct(sprintf('Validation failed on entity (%s)', method_exists($entity, '__toString') ? ' ('.$entity.')' : ''));
         }
 
     }
