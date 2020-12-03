@@ -1,6 +1,6 @@
 <?php
 namespace LazyBundle\Manager;
-use Doctrine\Common\Persistence\ManagerRegistry as DoctrineManagerRegistry;
+use Doctrine\Persistence\ManagerRegistry as DoctrineManagerRegistry;
 use LazyBundle\Service\PaginationService;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 

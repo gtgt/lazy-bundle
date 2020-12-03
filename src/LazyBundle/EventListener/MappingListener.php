@@ -8,7 +8,7 @@ use LazyBundle\DBAL\Types\PhpEnumType;
 use LazyBundle\DBAL\Types\MyPhpEnumType;
 use LazyBundle\Enum\Enum;
 use LazyBundle\Manager\ManagerRegistry;
-use Doctrine\Common\Persistence\Event\LifecycleEventArgs;
+use Doctrine\ORM\Event\LifecycleEventArgs;
 use Doctrine\DBAL\DBALException;
 use Doctrine\DBAL\Event\SchemaColumnDefinitionEventArgs;
 use Doctrine\DBAL\Platforms\MySqlPlatform;
