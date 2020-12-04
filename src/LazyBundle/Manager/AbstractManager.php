@@ -279,6 +279,7 @@ abstract class AbstractManager implements StrictConfigurationAwareInterface {
     public function clear(): void {
         if (method_exists($this->getRepository(), 'clear')) {
             $this->getRepository()->clear();
+            return;
         }
         throw new \BadMethodCallException(sprintf('%s not implemented.', __METHOD__));
     }
