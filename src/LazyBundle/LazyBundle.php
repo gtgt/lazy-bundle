@@ -1,6 +1,7 @@
 <?php
 namespace LazyBundle;
 
+use LazyBundle\DependencyInjection\CacheConfiguratorExtension;
 use LazyBundle\DependencyInjection\Compiler\AutoTagPass;
 use LazyBundle\DependencyInjection\Compiler\ContainerAwarePass;
 use LazyBundle\DependencyInjection\Compiler\LoggerAwarePass;
@@ -18,6 +19,7 @@ class LazyBundle extends Bundle {
      * {@inheritDoc}
      */
     public function build(ContainerBuilder $container) {
+        $container->registerExtension(new CacheConfiguratorExtension());
         parent::build($container);
         $container->addCompilerPass(new AutoTagPass(), PassConfig::TYPE_BEFORE_OPTIMIZATION, 100000);
         $container->addCompilerPass(new ContainerAwarePass());

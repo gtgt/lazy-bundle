@@ -36,6 +36,7 @@ class Configuration implements ConfigurationInterface
                     ->end()
                 ->end()
             ->end()
+            ->scalarNode('default_cache_provider')->info('Use $_SERVER[\'CACHE_PROVIDER\'] instead!')->end()
         ;
 
         return $treeBuilder;

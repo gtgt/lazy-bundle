@@ -14,7 +14,7 @@
     "minimum-stability": "dev",
     "require": {
         "php": "^7.1",
-        "doctrine/doctrine-bundle": "^2.2",
+        "doctrine/doctrine-bundle": "^2.3",
         "myclabs/php-enum": "^1.7",
         "symfony/framework-bundle": "^4.4|^5.0",
         "stof/doctrine-extensions-bundle": "^1.4",

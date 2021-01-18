@@ -5,7 +5,7 @@ use LazyBundle\EventListener\MappingListener;
 use LazyBundle\Manager\AbstractManager;
 
 /**
- * Interface ManagerAwareEntityInterface
+ * Interface for entities which needs their manager attached (done automatically by given manager).
  *
  * @package LazyBundle\Entity
  * @see MappingListener::postLoad()

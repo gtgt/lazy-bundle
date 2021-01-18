@@ -2,7 +2,7 @@
 namespace LazyBundle\Entity;
 
 /**
- * Interface IdentifiableEntityInterface
+ * Interface for entities with (unique) identifier requirement
  *
  * @package LazyBundle\Entity
  */

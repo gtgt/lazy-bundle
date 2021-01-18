@@ -1,0 +1,68 @@
+{% extends '@WebProfiler/Profiler/layout.html.twig' %}
+
+{% block toolbar %}
+    {% if 1 or collector.data|length > 0 %}
+        {% set data = collector.data %}
+        {% set icon %}
+            {# this is the content displayed as a panel in the toolbar #}
+            <svg id="_x31__x2C_5" enable-background="new 0 0 24 24" style="fill: #aaa;" height="20" viewBox="0 0 24 24" width="20" xmlns="http://www.w3.org/2000/svg"><path d="m16 14.75c0 .828-1.791 1.5-4 1.5s-4-.672-4-1.5v-2.25h8z" fill="#333"/><path d="m16.25 11.7c0 .856-1.903 1.55-4.25 1.55s-4.25-.694-4.25-1.55v-2.325h8.5z" fill="#333"/><ellipse cx="12" cy="8.896" fill="#333" rx="4" ry="1.354"/><path d="m12 11c-2.307 0-5-.524-5-2s2.693-2 5-2 5 .524 5 2-2.693 2-5 2zm-3.258-2c.518.229 1.649.5 3.258.5s2.74-.271 3.258-.5c-.518-.229-1.649-.5-3.258-.5s-2.74.271-3.258.5zm6.81.182h.01z"/><path d="m12 14c-2.307 0-5-.524-5-2 0-.414.336-.75.75-.75.365 0 .668.26.736.605.288.238 1.542.645 3.514.645s3.226-.407 3.514-.645c.067-.345.371-.605.736-.605.414 0 .75.336.75.75 0 1.476-2.693 2-5 2zm3.5-2.001s0 .001 0 0zm-7 0s0 .001 0 0z"/><path d="m12 17c-2.307 0-5-.524-5-2v-6c0-.414.336-.75.75-.75s.75.336.75.75v5.866c.313.239 1.559.634 3.5.634s3.187-.395 3.5-.634v-5.866c0-.414.336-.75.75-.75s.75.336.75.75v6c0 1.476-2.693 2-5 2z"/><path d="m2.8 24c-.411 0-.745-.33-.75-.742l-.05-4.5c-.002-.2.076-.393.217-.536.14-.142.333-.222.533-.222h4.5c.414 0 .75.336.75.75s-.336.75-.75.75h-3.742l.042 3.742c.005.414-.327.753-.741.758-.003 0-.006 0-.009 0z"/><path d="m21.25 6h-4.5c-.414 0-.75-.336-.75-.75s.336-.75.75-.75h3.75v-3.75c0-.414.336-.75.75-.75s.75.336.75.75v4.5c0 .414-.336.75-.75.75z"/><path d="m1.229 16c-.322 0-.62-.209-.718-.534-.339-1.128-.511-2.294-.511-3.466 0-6.617 5.383-12 12-12 3.69 0 7.108 1.653 9.379 4.536.256.325.2.797-.125 1.053-.325.255-.796.2-1.053-.125-1.985-2.519-4.973-3.964-8.201-3.964-5.79 0-10.5 4.71-10.5 10.5 0 1.025.151 2.046.448 3.034.119.396-.105.815-.502.935-.072.021-.145.031-.217.031z"/><path d="m12 24c-3.69 0-7.108-1.653-9.379-4.536-.256-.325-.2-.797.125-1.053.324-.256.797-.2 1.053.125 1.985 2.519 4.973 3.964 8.201 3.964 5.79 0 10.5-4.71 10.5-10.5 0-1.025-.151-2.046-.448-3.034-.119-.396.105-.815.502-.935.396-.117.815.105.935.502.339 1.129.511 2.295.511 3.467 0 6.617-5.383 12-12 12z"/></svg>
+            {% if data.usage is defined and data.total is defined %}
+                <span class="sf-toolbar-value">{{ '%0.2f'|format(data.usage) }}</span>
+                <span class="sf-toolbar-label">MB / </span>
+                <span class="sf-toolbar-value">{{ '%0.2f'|format(data.total) }}</span>
+                <span class="sf-toolbar-label">MB</span>
+            {% endif %}
+        {% endset %}
+
+        {% set text %}
+            {# this is the content displayed when hovering the mouse over
+               the toolbar panel #}
+            <div class="sf-toolbar-info-piece">
+                <b>Type</b>
+                <span>{{ data.type }}</span>
+            </div>
+            {% if data.items is defined %}
+                <div class="sf-toolbar-info-piece">
+                    <b>Items</b>
+                    <span>{{ data.items }}</span>
+                </div>
+            {% endif %}
+            <button class="btn btn-sm btn-danger" onclick="location.replace(location.href.replace(/__clear=[^&]/, '')+(location.href.indexOf('?') >= 0 ? '&' : '?')+'__clear=1')">Clear cache</button>
+        {% endset %}
+
+        {# the 'link' value set to 'false' means that this panel doesn't
+           show a section in the web profiler #}
+        {{ include('@WebProfiler/Profiler/toolbar_item.html.twig', { link: false }) }}
+    {% endif %}
+{% endblock %}
+
+{#
+{% block head %}
+    <!-- Optional. Here you can link to or define your own CSS and JS contents. -->
+    <!-- Use {{ parent() }} to extend the default styles instead of overriding them. -->
+{% endblock %}
+
+{% block menu %}
+    <!-- This left-hand menu appears when using the full-screen profiler. -->
+    <span class="label">
+        <span class="icon"><img src="..." alt=""/></span>
+        <strong>Request</strong>
+    </span>
+{% endblock %}
+
+{% block panel %}
+    <!-- Optional, for showing the most details. -->
+    <h2>Acceptable Content Types</h2>
+    <table>
+        <tr>
+            <th>Content Type</th>
+        </tr>
+
+        {% for type in collector.acceptableContentTypes %}
+            <tr>
+                <td>{{ type }}</td>
+            </tr>
+        {% endfor %}
+    </table>
+{% endblock %}
+#}

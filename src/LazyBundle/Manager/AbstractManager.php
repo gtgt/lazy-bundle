@@ -12,8 +12,8 @@ use LazyBundle\Exception\InvalidManagerArgumentException;
 use Doctrine\Bundle\DoctrineBundle\Registry;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
-use Doctrine\Common\Persistence\ObjectManager;
-use Doctrine\Common\Persistence\ObjectRepository;
+use Doctrine\Persistence\ObjectManager;
+use Doctrine\Persistence\ObjectRepository;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Mapping\ClassMetadata;
@@ -152,7 +152,7 @@ abstract class AbstractManager implements StrictConfigurationAwareInterface {
     }
 
     /**
-     * @return \Doctrine\Common\Persistence\Mapping\ClassMetadata|ClassMetadata
+     * @return ClassMetadata
      */
     public function getClassMetadata(): ClassMetadata {
         return $this->getEm()->getClassMetadata($this->getEntityClass());
@@ -228,8 +228,8 @@ abstract class AbstractManager implements StrictConfigurationAwareInterface {
     /**
      * Creates a new QueryBuilder instance that is prepopulated for this entity name.
      *
-     * @param string $alias
-     * @param string $indexBy The index for the from.
+     * @param string|null $alias
+     * @param string|null $indexBy The index for the from.
      *
      * @return QueryBuilder
      */
@@ -269,6 +269,18 @@ abstract class AbstractManager implements StrictConfigurationAwareInterface {
             return $this->getRepository()->createNativeNamedQuery($queryName);
         }
         throw new \BadMethodCallException(sprintf('%s not implemented.', __METHOD__));
+    }
+
+    /**
+     * Returns a partial reference, which is an entity object with only the identifiers set as they are passed to the first argument.
+     * All other fields are null.
+     *
+     * @param $id
+     *
+     * @return EntityInterface|null
+     */
+    public function getReference($id): ?EntityInterface {
+        return $this->getEm()->getPartialReference($this->getEntityClass(), $id);
     }
 
     /**
