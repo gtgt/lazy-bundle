@@ -2,6 +2,7 @@
 namespace LazyBundle\Manager;
 
 use Doctrine\Common\Collections\ArrayCollection;
+use LazyBundle\Exception\BadMethodCallException;
 use LazyBundle\Exception\InvalidManagerArgumentException;
 use Symfony\Component\DependencyInjection\ContainerAwareInterface;
 use Symfony\Component\DependencyInjection\ContainerAwareTrait;
@@ -23,7 +24,8 @@ class ManagerRegistry extends ArrayCollection implements ContainerAwareInterface
             /** @var AbstractManager $manager */
             $manager = \is_string($value) ? $this->container->get($value) : $value;
             $this->checkValue($manager);
-            $this->set($manager->getEntityClass(), $manager);
+            $newKey = !$manager instanceof BasicManager ? $manager->getEntityClass() : null;
+            $this->set($newKey, $manager);
         }
         $this->initialized = true;
     }
@@ -35,6 +37,13 @@ class ManagerRegistry extends ArrayCollection implements ContainerAwareInterface
         if (!$value instanceof AbstractManager) {
             throw new InvalidManagerArgumentException(sprintf('Only %s type managers can be registered into %s.', \get_class($value), static::class));
         }
+    }
+
+    public function get($key) {
+        if ($key === null) {
+            throw new BadMethodCallException(sprintf('You can\'t get %s directly. Use %s->getManagerForClass() method instead!', BasicManager::class, static::class));
+        }
+        return parent::get($key);
     }
 
     /**
@@ -60,17 +69,31 @@ class ManagerRegistry extends ArrayCollection implements ContainerAwareInterface
     }
 
     /**
+     * @param string $entityClass
+     *
+     * @return BasicManager
+     */
+    protected function createBasicManager(string $entityClass): BasicManager {
+        /** @var BasicManager $manager */
+        $manager = clone parent::get(null);
+        $manager->setEntityClass($entityClass);
+        // next time give the same...
+        $this->set($entityClass, $manager);
+        return $manager;
+    }
+
+    /**
      * @param string|object $classOrObject
      *
-     * @return AbstractManager|null
+     * @return AbstractManager
      */
-    public function getManagerForClass($classOrObject): ?AbstractManager {
+    public function getManagerForClass($classOrObject): AbstractManager {
         if (false === $this->initialized) {
             $this->init();
         }
         if (\is_object($classOrObject)) {
             $classOrObject = \get_class($classOrObject);
         }
-        return $this->containsKey($classOrObject) ? $this->get($classOrObject) : NULL;
+        return $this->containsKey($classOrObject) ? $this->get($classOrObject) : $this->createBasicManager($classOrObject);
     }
 }

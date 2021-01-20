@@ -26,17 +26,18 @@ class PaginationService {
 
     /**
      * @param QueryBuilder|Query $query
-     * @param Request $request
      * @param int $limit
+     * @param bool $fetchJoinCollection Don't use this if the query is already has joins or the entity has composite keys.
+     * @param Request|null $request
      *
      * @return Paginator
      */
-    public function paginate($query, int $limit, Request $request = NULL): Paginator {
+    public function paginate($query, int $limit, $fetchJoinCollection = false, Request $request = NULL): Paginator {
         if ($request === null) {
             $request = $this->requestStack->getCurrentRequest();
         }
         $currentPage = $request->query->getInt('p') ?: 1;
-        $paginator = new Paginator($query);
+        $paginator = new Paginator($query, $fetchJoinCollection);
         $paginator
             ->getQuery()
             ->setFirstResult($limit * ($currentPage - 1))

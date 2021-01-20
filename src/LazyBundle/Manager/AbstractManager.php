@@ -7,6 +7,7 @@ use LazyBundle\DependencyInjection\Configuration\StrictConfigurationAwareInterfa
 use LazyBundle\Entity\EntityInterface;
 use LazyBundle\Entity\IdentifiableEntityInterface;
 use LazyBundle\Entity\ManagerAwareEntityInterface;
+use LazyBundle\Exception\BadMethodCallException;
 use LazyBundle\Exception\EntityValidationFailedException;
 use LazyBundle\Exception\InvalidManagerArgumentException;
 use Doctrine\Bundle\DoctrineBundle\Registry;
@@ -169,6 +170,18 @@ abstract class AbstractManager implements StrictConfigurationAwareInterface {
             $this->entityClass = preg_replace('/\\\(?:Manager|Services)\\\([a-z\\\]+)Manager$/i', '\\Entity\\\$1', static::class);
         }
         return $this->entityClass;
+    }
+
+    /**
+     * Can be set only once!
+     *
+     * @param string $entityClass
+     */
+    public function setEntityClass(string $entityClass): void {
+        if ($this->entityClass) {
+            throw new BadMethodCallException(sprintf('You can\'t modify manager\'s (%s) entity class (%s) to %s once set (manually or automatically)', static::class, $this->entityClass, $entityClass));
+        }
+        $this->entityClass = $entityClass;
     }
 
     /**

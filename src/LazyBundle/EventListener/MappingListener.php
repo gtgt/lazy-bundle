@@ -228,7 +228,7 @@ class MappingListener {
     }
 
     /**
-     * Inject manager into entity
+     * Run entity dependency injection by it's manager.
      *
      * @param LifecycleEventArgs $event
      */

@@ -22,4 +22,4 @@ services:
                 - { name: kernel.event_listener, event: console.terminate, method: onConsoleTerminate }
 
     LazyBundle\:
-        resource: '../../{Component,Command,Controller,DataCollector, EntityListener,EventListener,Form,Manager,Service,Twig}'
+        resource: '../../{Component,Command,Controller,DataCollector,EntityListener,EventListener,Form,Manager,Service,Twig}'
