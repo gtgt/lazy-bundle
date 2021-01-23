@@ -4,10 +4,12 @@ namespace LazyBundle;
 use LazyBundle\DependencyInjection\CacheConfiguratorExtension;
 use LazyBundle\DependencyInjection\Compiler\AutoTagPass;
 use LazyBundle\DependencyInjection\Compiler\ContainerAwarePass;
+use LazyBundle\DependencyInjection\Compiler\ExtensionConfigPass;
 use LazyBundle\DependencyInjection\Compiler\LoggerAwarePass;
 use LazyBundle\DependencyInjection\Compiler\ManagerCompilerPass;
 use LazyBundle\DependencyInjection\Compiler\StrictConfigurationCheckerPass;
 use LazyBundle\DependencyInjection\Configuration\StrictConfigurationChecker;
+use LazyBundle\DependencyInjection\ExpressionLanguageProvider;
 use Symfony\Component\DependencyInjection\Compiler\PassConfig;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\HttpKernel\Bundle\Bundle;
@@ -19,7 +21,7 @@ class LazyBundle extends Bundle {
      * {@inheritDoc}
      */
     public function build(ContainerBuilder $container) {
-        $container->registerExtension(new CacheConfiguratorExtension());
+        $container->addExpressionLanguageProvider(new ExpressionLanguageProvider($container));
         parent::build($container);
         $container->addCompilerPass(new AutoTagPass(), PassConfig::TYPE_BEFORE_OPTIMIZATION, 100000);
         $container->addCompilerPass(new ContainerAwarePass());

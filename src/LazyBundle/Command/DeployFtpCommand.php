@@ -31,7 +31,7 @@ class DeployFtpCommand extends Command {
 
     public function __construct(string $projectDir) {
         $this->projectDir = $projectDir;
-        parent::__construct('lazy:deploy:ftp');
+        parent::__construct('deploy:ftp');
     }
 
     /**

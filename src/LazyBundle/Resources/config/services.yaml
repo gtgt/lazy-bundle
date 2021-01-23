@@ -6,6 +6,7 @@ services:
         bind:
             $projectDir: '%kernel.project_dir%'
 #            $assetsHelper: '@assets.packages'
+            $cronConfig: '@=config("lazy", "cron")'
     _instanceof:
         EasyCorp\Bundle\EasyAdminBundle\Form\Type\Configurator\TypeConfiguratorInterface:
             tags:
@@ -22,4 +23,10 @@ services:
                 - { name: kernel.event_listener, event: console.terminate, method: onConsoleTerminate }
 
     LazyBundle\:
-        resource: '../../{Component,Command,Controller,DataCollector,EntityListener,EventListener,Form,Manager,Service,Twig}'
+        resource: '../../{Component,Command,Controller,DataCollector,EntityListener,EventListener,Factory,Form,Manager,Service,Twig}'
+
+    LazyBundle\Factory\JobbyFactoryInterface:
+        alias: 'LazyBundle\Factory\JobbyFactory'
+
+    Jobby\Jobby:
+        factory: ['@LazyBundle\Factory\JobbyFactoryInterface', 'generate']

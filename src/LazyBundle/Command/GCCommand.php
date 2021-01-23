@@ -21,7 +21,7 @@ class GCCommand extends Command implements LoggerAwareInterface {
 
     public function __construct(ManagerRegistry $managerRegistry) {
         $this->managerRegistry = $managerRegistry;
-        parent::__construct('lazy:gc');
+        parent::__construct('entity:manager:gc');
     }
 
     /**

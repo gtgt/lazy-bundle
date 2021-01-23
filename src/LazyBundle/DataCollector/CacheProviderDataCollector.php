@@ -16,10 +16,10 @@ class CacheProviderDataCollector extends DataCollector implements TemplateAwareD
     private $cacheProvider;
 
     /**
-     * @param AdapterInterface $cacheProvider
+     * @param $defaultCacheProvider
      */
-    public function __construct($cacheProvider = null) {
-        $this->cacheProvider = $cacheProvider;
+    public function __construct($defaultCacheProvider = null) {
+        $this->cacheProvider = $defaultCacheProvider;
     }
 
     /**
