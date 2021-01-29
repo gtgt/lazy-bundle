@@ -34,7 +34,11 @@ trait JsonSerializableTrait {
      * @return void;
      */
     public function unserialize($serialized) {
-        $data = json_decode($serialized, TRUE);
+        $flags = JSON_INVALID_UTF8_SUBSTITUTE;
+        if (defined('JSON_THROW_ON_ERROR')) {
+            $flags |= JSON_THROW_ON_ERROR;
+        }
+        $data = json_decode($serialized, TRUE, $flags);
         $this->fromArray($data);
     }
 }
