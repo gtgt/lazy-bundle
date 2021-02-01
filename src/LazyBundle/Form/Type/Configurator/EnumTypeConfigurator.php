@@ -28,9 +28,6 @@ class EnumTypeConfigurator implements TypeConfiguratorInterface {
      * {@inheritdoc}
      */
     public function configure($name, array $options, array $metadata, FormConfigInterface $parentConfig): array {
-        if (isset($options['choices'])) {
-            return $options;
-        }
         $enumClass = null;
         /** @var EntityManager $manager */
         $entityClass = $parentConfig->getDataClass();
@@ -48,11 +45,16 @@ class EnumTypeConfigurator implements TypeConfiguratorInterface {
             return $options;
         }
         /** @var Enum $enumClass */
+        $origChoices = $options['choices'] ?? [];
         $options['choices'] = array_combine($enumClass::toArray(), $enumClass::values());
 
         $options['choice_value'] = 'value';
-        $options['choice_label'] = function(?Enum $enum) {
-            return $enum ? $enum->getValue() : '';
+        $options['choice_label'] = function(?Enum $enum) use ($origChoices) {
+            if ($enum === null) {
+                return '';
+            }
+            $choice = array_search($enum->getValue(), $origChoices, true);
+            return $choice ?: $enum->getValue();
         };
         $options['choice_attr'] = function(?Enum $enum) {
             return $enum ? ['class' => 'enum_'.strtolower($enum->getKey())] : [];
