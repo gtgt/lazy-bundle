@@ -41,11 +41,6 @@ class Configuration implements ConfigurationInterface
             ->scalarNode('default_cache_provider')->defaultValue('%env(CACHE_PROVIDER)%')->end()
         ;
 
-        $rootNode
-            ->children()
-            ->scalarNode('php_executable')->defaultValue('php')->end()
-            ->end();
-
         $cronNode = $rootNode
             ->children()
             ->arrayNode('cron')
@@ -73,6 +68,10 @@ class Configuration implements ConfigurationInterface
 
     private function addCronJobsNode(ArrayNodeDefinition $rootNode): void
     {
+        $rootNode
+            ->children()
+            ->scalarNode('php_executable')->defaultValue('php')->end()
+            ->end();
         $cronJobsNode = $rootNode
             ->children()
             ->arrayNode('jobs')
