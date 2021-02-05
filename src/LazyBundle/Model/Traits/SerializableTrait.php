@@ -73,7 +73,13 @@ trait SerializableTrait {
      * @return void;
      */
     public function unserialize($serialized): void {
-        $data = unserialize($serialized, ['allowed_classes' => []]);
+        $allowedClasses = [];
+        foreach ($this->getSerializableAttributeTypesFromCache() as $name => [$type, $isArray, $isClass, $serializableByType]) {
+            if ($isClass && $serializableByType) {
+                $allowedClasses[$type] = ltrim($type, '\\');
+            }
+        }
+        $data = unserialize($serialized, ['allowed_classes' => array_values($allowedClasses)]);
         $this->fromArray($data);
     }
 
