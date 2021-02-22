@@ -70,22 +70,23 @@ class Configuration implements ConfigurationInterface
     {
         $rootNode
             ->children()
-            ->scalarNode('php_executable')->defaultValue('php')->end()
+                ->scalarNode('php_executable')->defaultValue('php')->end()
+                ->scalarNode('data_file')->defaultValue('%kernel.cache_dir%/cron.json')->end()
             ->end();
         $cronJobsNode = $rootNode
             ->children()
-            ->arrayNode('jobs')
-            ->defaultValue([])
-            ->info('Here you can define your cron jobs')
-            ->useAttributeAsKey('name', false);
+                ->arrayNode('jobs')
+                ->defaultValue([])
+                ->info('Here you can define your cron jobs')
+                ->useAttributeAsKey('name', false);
 
         $prototypeNode = $cronJobsNode->arrayPrototype()->info('Job configuration');
 
         $prototypeNode
             ->children()
-            ->scalarNode('schedule')->defaultValue('* * * * *')->info('Crontab schedule format (man -s 5 crontab) or DateTime format (Y-m-d H:i:s)')->end()
-            ->scalarNode('command')->isRequired()->cannotBeEmpty()->info('Command to execute')->end()
-            ->booleanNode('is_symfony_command')->defaultTrue()->info("If set to true, bundle will decorate *command* with 'php path/bin/console {command}'")
+                ->scalarNode('schedule')->defaultValue('* * * * *')->info('Crontab schedule format (man -s 5 crontab) or DateTime format (Y-m-d H:i:s)')->end()
+                ->scalarNode('command')->isRequired()->cannotBeEmpty()->info('Command to execute')->end()
+                ->booleanNode('is_symfony_command')->defaultTrue()->info("If set to true, bundle will decorate *command* with 'php path/bin/console {command}'")
         ;
 
         $this->appendSharedNodes($prototypeNode->children());

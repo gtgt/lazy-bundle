@@ -1,11 +1,10 @@
 <?php
+
 namespace LazyBundle\Factory;
 
+use LazyBundle\Util\Jobby;
 
-use Jobby\Jobby;
-
-class JobbyFactory implements JobbyFactoryInterface
-{
+class JobbyFactory implements JobbyFactoryInterface {
     /**
      * @var array
      */
@@ -15,14 +14,12 @@ class JobbyFactory implements JobbyFactoryInterface
      */
     private $projectDir;
 
-    public function __construct(array $cronConfig, string $projectDir)
-    {
+    public function __construct(array $cronConfig, string $projectDir) {
         $this->config = $cronConfig;
         $this->projectDir = $projectDir;
     }
 
-    public function generate(): Jobby
-    {
+    public function generate(): Jobby {
         $jobby = new Jobby($this->config['globals']);
         $phpEx = $this->config['php_executable'];
 
