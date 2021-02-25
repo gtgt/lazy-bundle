@@ -1,17 +1,22 @@
 
-let easyadminDragndropSort =
-    {
+let easyadminDragndropSort = {
         initDraggableEntityRows: function() {
 
-            if(document.body.classList.contains('easyadmin') && document.body.classList.contains('list')) {
+            if(document.body.classList.contains('easyadmin')) {
+
+                this.view = ['list', 'edit', 'show'].reduce(function(prev, cur) {
+                    if (document.body.classList.contains(cur)) {
+                        return cur;
+                    }
+                });
 
                 if (!Array.prototype.last){
                     Array.prototype.last = function(){
                         return this[this.length - 1];
                     };
                 }
-
-                let entityClass = document.body.id.split('-').last();
+                let bodyId = document.body.id.split('-');
+                let entityClass = bodyId[bodyId.length - (this.view === 'list' ? 1 : 2)];
                 let content = document.getElementById("main");
                 let table = content.getElementsByClassName("table")[0];
                 let tbody = table.getElementsByTagName("tbody")[0];
@@ -93,8 +98,9 @@ let easyadminDragndropSort =
                                 let newTbody = newBody.getElementsByTagName("tbody")[0];
                                 tbody.parentNode.replaceChild(newTbody, tbody);
                                 easyadminDragndropSort.initDraggableEntityRows();
-
-                                $('input[data-toggle="toggle"]').bootstrapToggle();
+                                if ($.fn.bootstrapToggle) {
+                                    $('input[data-toggle="toggle"]').bootstrapToggle();
+                                }
                             }
                             else {
                                 alert("An error occurred while sorting. Please refresh the page and try again.")

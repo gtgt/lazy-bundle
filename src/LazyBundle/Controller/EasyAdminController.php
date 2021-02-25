@@ -2,7 +2,6 @@
 
 namespace LazyBundle\Controller;
 
-use EasyCorp\Bundle\EasyAdminBundle\Controller\EasyAdminController as BaseController;
 use EasyCorp\Bundle\EasyAdminBundle\Exception\UndefinedEntityException;
 use LazyBundle\Manager\AbstractManager;
 use LazyBundle\Manager\ManagerRegistry;
@@ -10,14 +9,63 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Annotation\Route;
 
+if (class_exists('AlterPHP\EasyAdminExtensionBundle\Controller\EasyAdminController')) {
+    class BaseController extends \AlterPHP\EasyAdminExtensionBundle\Controller\EasyAdminController {}
+} else {
+    class BaseController extends \EasyCorp\Bundle\EasyAdminBundle\Controller\EasyAdminController {}
+}
 class EasyAdminController extends BaseController {
     /**
      * @var ManagerRegistry
      */
     protected $registry;
 
+    /**
+     * @var \ReflectionProperty
+     */
+    protected $configManagerReflection;
+
     public function __construct(ManagerRegistry $registry) {
         $this->registry = $registry;
+    }
+
+
+    /**
+     * @param array $backendConfig
+     */
+    protected function setBackendConfig(array $backendConfig): void {
+        if ($this->configManagerReflection === null) {
+            $configManager = $this->container->get('easyadmin.config.manager');
+            try {
+                $this->configManagerReflection = new \ReflectionProperty($configManager, 'backendConfig');
+            } catch (\ReflectionException $e) {
+                return;
+            }
+            $this->configManagerReflection->setAccessible(true);
+            $this->configManagerReflection->object = $configManager;
+        }
+        // It's a hack I know... not really nice
+        $this->configManagerReflection->setValue($this->configManagerReflection->object, $backendConfig);
+    }
+
+    /**
+     * @param string $view
+     * @param array $parameters
+     * @param Response|null $response
+     *
+     * @return Response
+     */
+    protected function render(string $view, array $parameters = [], Response $response = null): Response {
+        $action = $this->request->query->get('action', 'list');
+        if (\in_array($action, ['list', 'show', 'edit', 'new'])) {
+            $assets = $this->entity[$action]['assets'] ?? null;
+            if (\is_array($assets)) {
+                $this->config['design']['assets'] = array_merge_recursive($this->config['design']['assets'], $assets);
+                $this->setBackendConfig($this->config);
+
+            }
+        }
+        return parent::render($view, $parameters, $response);
     }
 
     protected function createNewEntity() {
