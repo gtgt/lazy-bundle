@@ -22,7 +22,7 @@ class EasyAdminController extends BaseController {
     /**
      * @var ManagerRegistry
      */
-    protected $managerRegistry;
+    private $managerRegistry;
 
     /**
      * @var \ReflectionProperty
@@ -81,7 +81,7 @@ class EasyAdminController extends BaseController {
 
     protected function createNewEntity() {
         $entityFullyQualifiedClassName = $this->entity['class'];
-        $manager = $this->managerRegistry->getManagerForClass($entityFullyQualifiedClassName);
+        $manager = $this->getManagerRegistry()->getManagerForClass($entityFullyQualifiedClassName);
         if ($manager instanceof AbstractManager) {
             return $manager->createNew();
         }
