@@ -2,6 +2,7 @@
 
 namespace LazyBundle\Controller;
 
+use AlterPHP\EasyAdminExtensionBundle\Security\AdminAuthorizationChecker;
 use EasyCorp\Bundle\EasyAdminBundle\Exception\UndefinedEntityException;
 use LazyBundle\Manager\AbstractManager;
 use LazyBundle\Manager\ManagerRegistry;
@@ -10,23 +11,33 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Annotation\Route;
 
 if (class_exists('AlterPHP\EasyAdminExtensionBundle\Controller\EasyAdminController')) {
-    class BaseController extends \AlterPHP\EasyAdminExtensionBundle\Controller\EasyAdminController {}
+    class BaseController extends \AlterPHP\EasyAdminExtensionBundle\Controller\EasyAdminController {
+    }
 } else {
-    class BaseController extends \EasyCorp\Bundle\EasyAdminBundle\Controller\EasyAdminController {}
+    class BaseController extends \EasyCorp\Bundle\EasyAdminBundle\Controller\EasyAdminController {
+    }
 }
+
 class EasyAdminController extends BaseController {
     /**
      * @var ManagerRegistry
      */
-    protected $registry;
+    protected $managerRegistry;
 
     /**
      * @var \ReflectionProperty
      */
     protected $configManagerReflection;
 
-    public function __construct(ManagerRegistry $registry) {
-        $this->registry = $registry;
+    public function getManagerRegistry() {
+        if ($this->managerRegistry === null) {
+            $this->managerRegistry = $this->get(ManagerRegistry::class);
+        }
+        return $this->managerRegistry;
+    }
+
+    public static function getSubscribedServices(): array {
+        return \array_merge(parent::getSubscribedServices(), [ManagerRegistry::class]);
     }
 
 
@@ -70,7 +81,7 @@ class EasyAdminController extends BaseController {
 
     protected function createNewEntity() {
         $entityFullyQualifiedClassName = $this->entity['class'];
-        $manager = $this->registry->getManagerForClass($entityFullyQualifiedClassName);
+        $manager = $this->managerRegistry->getManagerForClass($entityFullyQualifiedClassName);
         if ($manager instanceof AbstractManager) {
             return $manager->createNew();
         }
@@ -96,6 +107,7 @@ class EasyAdminController extends BaseController {
      * @param String $entityClassName
      * @param Integer $id
      * @param Integer $position
+     *
      * @return Response
      *
      * @throws \ReflectionException
@@ -125,12 +137,12 @@ class EasyAdminController extends BaseController {
         $em->flush();
         return $this->redirectToRoute(
             'easyadmin',
-            array(
+            [
                 'action' => 'list',
                 'entity' => $entityClassName,
                 'sortField' => 'position',
                 'sortDirection' => 'ASC',
-            )
+            ]
         );
     }
 }
