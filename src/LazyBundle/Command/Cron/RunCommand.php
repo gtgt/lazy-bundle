@@ -14,9 +14,9 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class ExecuteCommand extends Command
+class RunCommand extends Command
 {
-    public static $defaultName = 'cron:execute';
+    public static $defaultName = 'cron:run';
     /**
      * @var Jobby
      */
