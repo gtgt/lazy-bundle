@@ -3,7 +3,6 @@
 namespace LazyBundle\DataCollector;
 
 use Symfony\Bundle\FrameworkBundle\DataCollector\AbstractDataCollector;
-use Symfony\Component\Cache\Adapter\AdapterInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -27,7 +26,8 @@ class CronDataCollector extends AbstractDataCollector {
         $this->data = [
             'jobs' => array_map(function(string $name, array $config) {
                 return [$name, $config['command'], $config['schedule'], $config['enabled'] ? 'true' : 'false',];
-            }, array_keys($this->config['jobs']), $this->config['jobs'])
+            }, array_keys($this->config['jobs']), $this->config['jobs']),
+            'columns' => ['name', 'command', 'schedule', 'enabled'],
         ];
     }
 
@@ -41,6 +41,10 @@ class CronDataCollector extends AbstractDataCollector {
 
     public function getJobs() {
         return $this->data['jobs'];
+    }
+
+    public function getColumns() {
+        return $this->data['columns'];
     }
 
     public static function getTemplate(): ?string {

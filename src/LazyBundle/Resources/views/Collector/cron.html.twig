@@ -36,19 +36,20 @@
 {% block panel %}
     <!-- Optional, for showing the most details. -->
     <h2>Cron</h2>
+    {{ dump(collector) }}
     {% if collector.jobs|length %}
     <table>
         <thead>
-        {% for property in data.jobs[0] %}
             <tr>
-                <th>{{ loop.index }}</th>
+            {% for property in collector.columns %}
+                <th>{{ property }}</th>
+            {% endfor %}
             </tr>
-        {% endfor %}
         </thead>
         <tbody>
-        {% for job in data.jobs %}
+        {% for job in collector.jobs %}
             <tr>
-                {% for property in data.jobs %}
+                {% for property in job %}
                 <td>{{ property }}</td>
                 {% endfor %}
             </tr>
