@@ -12,7 +12,7 @@ use Symfony\Component\Filesystem\Filesystem;
 class Jobby extends BaseJobby {
     public function getDefaultConfig(): array {
         return [
-            'data_file' => '/tmp/cron.json'
+            'data_file' => $this->getHelper()->getTempDir().'/cron.json'
         ] + parent::getDefaultConfig();
     }
 
@@ -45,7 +45,7 @@ class Jobby extends BaseJobby {
             try {
                 $this->editJsonEntry($name, ['nextExecution' => (new CronExpression($config['schedule']))->getNextRunDate()->format('Y-m-d H:i:s')]);
             } catch (\Exception $e) {
-                throw new CronException(sprintf('Job (%s) failed when calculating or writing next execution time.', $name));
+                throw new CronException(sprintf('Job (%s) failed when calculating or writing next execution time to file (%s).', $name, $this->getConfig()['data_file']));
             }
         }
     }
