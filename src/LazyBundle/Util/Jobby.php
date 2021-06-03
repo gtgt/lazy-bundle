@@ -7,9 +7,21 @@ use Jobby\Exception;
 use Jobby\Helper;
 use Jobby\Jobby as BaseJobby;
 use LazyBundle\Exception\CronException;
+use Psr\Cache\CacheItemPoolInterface;
 use Symfony\Component\Filesystem\Filesystem;
 
 class Jobby extends BaseJobby {
+
+    /**
+     * @var CacheItemPoolInterface
+     */
+    private $cache;
+
+    public function __construct(array $config = [], CacheItemPoolInterface $cache = null) {
+       parent::__construct($config);
+       $this->cache = $cache;
+   }
+
     public function getDefaultConfig(): array {
         return [
             'data_file' => $this->getHelper()->getTempDir().'/cron.json'
@@ -33,7 +45,7 @@ class Jobby extends BaseJobby {
         foreach ($this->jobs as $jobConfig) {
             [$name, $config] = $jobConfig;
             $jobData = $this->getJobData($name);
-            if ($jobData['nextExecution'] !== null && $now < \DateTimeImmutable::createFromFormat('Y-m-d H:i:s', $jobData['nextExecution'])) {
+            if ($jobData['nextExecution'] !== null && $now < \DateTimeImmutable::createFromFormat('U', $jobData['nextExecution'])) {
                 continue;
             }
             if ($isUnix) {
@@ -43,7 +55,8 @@ class Jobby extends BaseJobby {
             }
             // use $now as argument?
             try {
-                $this->editJsonEntry($name, ['nextExecution' => (new CronExpression($config['schedule']))->getNextRunDate()->format('Y-m-d H:i:s')]);
+                $nextRunTime = (new CronExpression($config['schedule']))->getNextRunDate(new \DateTime('now'));
+                $this->editJsonEntry($name, ['nextExecution' => $nextRunTime->format('U')]);
             } catch (\Exception $e) {
                 throw new CronException(sprintf('Job (%s) failed when calculating or writing next execution time to file (%s).', $name, $this->getConfig()['data_file']));
             }
@@ -58,18 +71,26 @@ class Jobby extends BaseJobby {
      * @param null $name
      *
      * @return array
+     *
+     * @noinspection PhpDocMissingThrowsInspection
      */
     protected function getJobData($name = null): array {
-        $file = $this->config['data_file'];
-        if (!is_file($file)) {
-            $fs = new Filesystem();
-            $dir = dirname($file);
-            if (!$fs->exists($dir)) {
-                $fs->mkdir($dir);
-            }
-            $fileData = [];
+        if ($this->cache instanceof CacheItemPoolInterface) {
+            /** @noinspection PhpUnhandledExceptionInspection */
+            $cacheItem = $this->cache->getItem('cron.data');
+            $fileData = $cacheItem->isHit() ? $cacheItem->get() : [];
         } else {
-            $fileData = json_decode(file_get_contents($file), true);
+            $file = $this->config['data_file'];
+            if (!is_file($file)) {
+                $fs = new Filesystem();
+                $dir = dirname($file);
+                if (!$fs->exists($dir)) {
+                    $fs->mkdir($dir);
+                }
+                $fileData = [];
+            } else {
+                $fileData = json_decode(file_get_contents($file), true);
+            }
         }
         $defaultJobData = $this->getDefaultJobData();
         $jobData = [];
@@ -103,10 +124,20 @@ class Jobby extends BaseJobby {
      * method that writes the cron.json when we add or edit an entry
      *
      * @param array $data
+     *
+     * @noinspection PhpDocMissingThrowsInspection
      */
     protected function writeJsonCron(array $data): void {
-        $fs = new Filesystem();
-        $file = $this->config['data_file'];
-        $fs->dumpFile($file, json_encode($data));
+        if ($this->cache instanceof CacheItemPoolInterface) {
+            /** @noinspection PhpUnhandledExceptionInspection */
+            $cacheItem = $this->cache->getItem('cron.data');
+            $cacheItem->set($data);
+            $cacheItem->expiresAfter(null);
+            $this->cache->save($cacheItem);
+        } else {
+            $fs = new Filesystem();
+            $file = $this->config['data_file'];
+            $fs->dumpFile($file, json_encode($data));
+        }
     }
 }

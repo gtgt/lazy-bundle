@@ -3,6 +3,9 @@
 namespace LazyBundle\Factory;
 
 use LazyBundle\Util\Jobby;
+use Psr\Cache\CacheItemPoolInterface;
+use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
+use Symfony\Contracts\Cache\CacheInterface;
 
 class JobbyFactory implements JobbyFactoryInterface {
     /**
@@ -14,13 +17,22 @@ class JobbyFactory implements JobbyFactoryInterface {
      */
     private $projectDir;
 
-    public function __construct(array $cronConfig, string $projectDir) {
+    /**
+     * @var CacheItemPoolInterface
+     */
+    private $cache;
+
+    public function __construct(array $cronConfig, string $projectDir, CacheInterface $cacheCron = null) {
         $this->config = $cronConfig;
         $this->projectDir = $projectDir;
+        if ($cacheCron !== null && !$cacheCron instanceof CacheItemPoolInterface) {
+            throw new InvalidConfigurationException(sprintf('Cron cache (%s) must implement %s.', get_class($cacheCron), CacheItemPoolInterface::class));
+        }
+        $this->cache = $cacheCron;
     }
 
     public function generate(): Jobby {
-        $jobby = new Jobby($this->config['globals']);
+        $jobby = new Jobby($this->config['globals'], $this->cache);
         $phpEx = $this->config['php_executable'];
 
         foreach ($this->config['jobs'] as $jobName => $jobConfig) {
