@@ -12,13 +12,14 @@
 namespace LazyBundle\DependencyInjection;
 
 use Doctrine\Common\Collections\ArrayCollection;
-use LazyBundle\Service\ExtensionConfigStore;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
 use Symfony\Component\Config\Definition\Processor;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Exception\InvalidArgumentException;
 use Symfony\Component\DependencyInjection\Exception\ParameterNotFoundException;
 use Symfony\Component\DependencyInjection\Extension\Extension;
+use Symfony\Component\DependencyInjection\ParameterBag\EnvPlaceholderParameterBag;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBag;
 use Symfony\Component\ExpressionLanguage\ExpressionFunction;
 use Symfony\Component\ExpressionLanguage\ExpressionFunctionProviderInterface;
 use Symfony\Component\HttpKernel\DependencyInjection\ConfigurableExtension;
@@ -72,20 +73,24 @@ class ExpressionLanguageProvider implements ExpressionFunctionProviderInterface 
                             throw new InvalidArgumentException(sprintf('Extension %s (%s) doesn\'t have configuration class (%s).', $extensionName, \get_class($extension), ConfigurationInterface::class));
                         }
                         $processor = new Processor();
-                        $config = $processor->processConfiguration($configuration, $configs);
+                        //$config = new MergeExtensionConfigurationParameterBag($this->container->getParameterBag());
+                        //$config->add($processor->processConfiguration($configuration, $configs));
+                        $config = new EnvPlaceholderParameterBag($processor->processConfiguration($configuration, $configs));
                     }
+
                     $this->extensionConfigs->set($extensionName, $config);
                 }
+                $result = [];
                 while ($name) {
                     $key = trim(array_shift($name), '"\'');
-                    if (!isset($config[$key])) {
-                        throw new InvalidArgumentException(sprintf('There are no %s key in %s extension config..', $name, $extensionName));
+                    if (!$config->has($key)) {
+                        throw new InvalidArgumentException(sprintf('There are no %s key in %s extension config..', $key, $extensionName));
                     }
-                    $config = $config[$key];
+                    $result += $this->container->getParameterBag()->resolveValue($config->get($key));
                 }
-                return var_export($config, true);
+                return var_export($result, true);
             }, function (array $variables, string $extension, string ...$name) {
-                return $variables['container']->get(ExtensionConfigStore::class)->getConfig($extension, ...$name);
+                return $variables['container']->getExtensionConfig($extension, ...$name);
             }),
         ];
     }

@@ -22,12 +22,6 @@ class Jobby extends BaseJobby {
        $this->cache = $cache;
    }
 
-    public function getDefaultConfig(): array {
-        return [
-            'data_file' => $this->getHelper()->getTempDir().'/cron.json'
-        ] + parent::getDefaultConfig();
-    }
-
     protected function getDefaultJobData(): array {
         return [
             'nextExecution' => null,
@@ -58,7 +52,7 @@ class Jobby extends BaseJobby {
                 $nextRunTime = (new CronExpression($config['schedule']))->getNextRunDate(new \DateTime('now'));
                 $this->editJsonEntry($name, ['nextExecution' => $nextRunTime->format('U')]);
             } catch (\Exception $e) {
-                throw new CronException(sprintf('Job (%s) failed when calculating or writing next execution time to file (%s).', $name, $this->getConfig()['data_file']));
+                throw new CronException(sprintf('Job (%s) failed when calculating or writing next execution time to file (%s).', $name, $this->getConfig()['dataFile']));
             }
         }
     }
@@ -80,7 +74,7 @@ class Jobby extends BaseJobby {
             $cacheItem = $this->cache->getItem('cron.data');
             $fileData = $cacheItem->isHit() ? $cacheItem->get() : [];
         } else {
-            $file = $this->config['data_file'];
+            $file = $this->config['dataFile'];
             if (!is_file($file)) {
                 $fs = new Filesystem();
                 $dir = dirname($file);
@@ -136,7 +130,7 @@ class Jobby extends BaseJobby {
             $this->cache->save($cacheItem);
         } else {
             $fs = new Filesystem();
-            $file = $this->config['data_file'];
+            $file = $this->config['dataFile'];
             $fs->dumpFile($file, json_encode($data));
         }
     }

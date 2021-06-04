@@ -71,7 +71,7 @@ class Configuration implements ConfigurationInterface
         $rootNode
             ->children()
                 ->scalarNode('php_executable')->defaultValue('php')->end()
-                ->scalarNode('data_file')->defaultValue('%kernel.cache_dir%/cron.json')->end()
+                ->scalarNode('dataFile')->defaultValue('%kernel.cache_dir%/cron.json')->end()
             ->end();
         $cronJobsNode = $rootNode
             ->children()
@@ -98,16 +98,18 @@ class Configuration implements ConfigurationInterface
     private function appendSharedNodes(NodeBuilder $builder): void
     {
         $builder
+            ->scalarNode('jobClass')->defaultValue('LazyBundle\\Util\\BackgroundJob')->end()
             ->scalarNode('runAs')->defaultNull()->info('Run as this user, if crontab user has *sudo* privileges')->end()
             ->booleanNode('debug')->defaultFalse()->info("Send *jobby* internal messages to 'debug.log'")->end()
             ->scalarNode('environment')->defaultNull()->info('Development environment for this job')->end()
             ->scalarNode('runOnHost')->defaultValue(gethostname())->info('Run jobs only on this hostname')->end()
             ->integerNode('maxRuntime')->defaultNull()->info('Maximum execution time for this job (in seconds)')->end()
             ->booleanNode('enabled')->defaultTrue()->info('Run this job at scheduled times')->end()
+            ->scalarNode('tmpDir')->defaultValue('%kernel.cache_dir%')->end()
             ->scalarNode('haltDir')->defaultNull()->info('A job will not run if this directory contains a file bearing the job\'s name')->end()
-            ->scalarNode('output')->defaultValue('/dev/null')->info('Redirect *stdout* and *stderr* to this file')->end()
-            ->scalarNode('output_stdout')->defaultValue('/dev/null')->info('Redirect *stdout* to this file')->end()
-            ->scalarNode('output_stderr')->defaultValue('/dev/null')->info('Redirect *stderr* to this file')->end()
+            ->scalarNode('output')->defaultValue('/dev/null')->info('Redirect *stdout* and *stderr* to this file (you can use %kernel.logs_dir% variable)')->end()
+            ->scalarNode('output_stdout')->defaultValue('/dev/null')->info('Redirect *stdout* to this file (you can use %kernel.logs_dir% variable)')->end()
+            ->scalarNode('output_stderr')->defaultValue('/dev/null')->info('Redirect *stderr* to this file (you can use %kernel.logs_dir% variable)')->end()
             ->scalarNode('dateFormat')->defaultValue('Y-m-d H:i:s')->info('Format for dates on *jobby* log messages')->end()
             ->scalarNode('recipients')->defaultNull()->info('Comma-separated string of email addresses')->end()
             ->scalarNode('mailer')->defaultValue('sendmail')->info('Email method: *sendmail* or *smtp* or *mail*')->end()

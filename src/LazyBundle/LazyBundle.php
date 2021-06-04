@@ -1,10 +1,8 @@
 <?php
 namespace LazyBundle;
 
-use LazyBundle\DependencyInjection\CacheConfiguratorExtension;
 use LazyBundle\DependencyInjection\Compiler\AutoTagPass;
 use LazyBundle\DependencyInjection\Compiler\ContainerAwarePass;
-use LazyBundle\DependencyInjection\Compiler\ExtensionConfigPass;
 use LazyBundle\DependencyInjection\Compiler\LoggerAwarePass;
 use LazyBundle\DependencyInjection\Compiler\ManagerCompilerPass;
 use LazyBundle\DependencyInjection\Compiler\StrictConfigurationCheckerPass;
