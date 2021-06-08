@@ -43,14 +43,16 @@
             {% for property in collector.columns %}
                 <th>{{ property }}</th>
             {% endfor %}
+                <th>&nbsp;</th>
             </tr>
         </thead>
         <tbody>
         {% for job in collector.jobs %}
             <tr>
                 {% for property in job %}
-                <td>{{ property }}</td>
+                <td style="vertical-align: middle;">{{ property }}</td>
                 {% endfor %}
+                <td><a class="btn btn-sm btn-default">Run</a></td>
             </tr>
         {% endfor %}
         </tbody>
