@@ -25,6 +25,7 @@ class Configuration implements ConfigurationInterface
                 ->end()
             ->end()
             ->arrayNode('dql_extensions')->enumPrototype()->values(['mysql', 'oracle', 'postgres', 'sqlite'])->end()->end()
+            ->booleanNode('enable_doctrine_enum_types')->defaultValue(false)->end()
             ->arrayNode('deploy_ftp')
                 ->useAttributeAsKey('name')
                 ->prototype('array')

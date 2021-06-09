@@ -1,5 +1,5 @@
 framework:
     cache:
         pools:
-            enum_type.cache:
+            cache.enum_type:
                 adapter: cache.app

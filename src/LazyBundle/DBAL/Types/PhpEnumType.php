@@ -1,4 +1,5 @@
 <?php
+
 namespace LazyBundle\DBAL\Types;
 
 use InvalidArgumentException;
@@ -65,6 +66,7 @@ class PhpEnumType extends Type {
     /**
      * @param string|null $value
      * @param AbstractPlatform $platform
+     *
      * @return mixed
      * @throws InvalidArgumentException
      */
@@ -115,6 +117,15 @@ class PhpEnumType extends Type {
     }
 
     /**
+     * Gets an array of database types that map to this Doctrine type.
+     *
+     * @return string[]
+     */
+    public function getMappedDatabaseTypes(AbstractPlatform $platform) {
+        return [];
+    }
+
+    /**
      * @param string $typeNameOrEnumClass
      * @param string|null $enumClass
      * @param bool $useKey
@@ -147,6 +158,7 @@ class PhpEnumType extends Type {
 
     /**
      * @param array $types
+     *
      * @throws InvalidArgumentException
      * @throws DBALException
      */
@@ -159,6 +171,7 @@ class PhpEnumType extends Type {
 
     /**
      * @param AbstractPlatform $platform
+     *
      * @return boolean
      */
     public function requiresSQLCommentHint(AbstractPlatform $platform) {

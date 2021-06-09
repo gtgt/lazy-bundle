@@ -1,8 +1,9 @@
 <?php
 
-namespace LazyBundle\EventListener;
+namespace LazyBundle\EventSubscriber;
 
 use Doctrine\DBAL\Connection;
+use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry as DoctrineManagerRegistry;
 use LazyBundle\DBAL\Types\PhpEnumType;
 use LazyBundle\DBAL\Types\MyPhpEnumType;
@@ -15,15 +16,18 @@ use Doctrine\DBAL\Platforms\MySqlPlatform;
 use Doctrine\ORM\Event\LoadClassMetadataEventArgs;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Symfony\Component\Cache\CacheItem;
+use Symfony\Component\Console\ConsoleEvents;
 use Symfony\Component\Console\Event\ConsoleCommandEvent;
 use Symfony\Component\Console\Event\ConsoleTerminateEvent;
+use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\Event\TerminateEvent;
+use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 
 
-class MappingListener {
+class DoctrineMappingEventSubscriber implements EventSubscriberInterface {
     /**
      * @var ManagerRegistry
      */
@@ -62,16 +66,31 @@ class MappingListener {
     private $initialized = false;
 
     /**
-     * MappingListener constructor.
+     * @var bool
+     */
+    private $enableEnumTypes = false;
+
+    /**
+     * DoctrineMappingEventSubscriber constructor.
      *
      * @param ManagerRegistry $managerRegistry
      * @param DoctrineManagerRegistry $doctrineRegistry
-     * @param CacheInterface $enumTypeCache
+     * @param CacheInterface $cacheEnumType
      */
-    public function __construct(ManagerRegistry $managerRegistry, DoctrineManagerRegistry $doctrineRegistry, CacheInterface $enumTypeCache) {
+    public function __construct(ManagerRegistry $managerRegistry, DoctrineManagerRegistry $doctrineRegistry, CacheInterface $cacheEnumType) {
         $this->managerRegistry = $managerRegistry;
         $this->doctrineRegistry = $doctrineRegistry;
-        $this->cache = $enumTypeCache;
+        $this->cache = $cacheEnumType;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public static function getSubscribedEvents(): \Generator {
+        yield KernelEvents::REQUEST => 'onKernelRequest';
+        yield ConsoleEvents::COMMAND => 'onConsoleCommand';
+        yield KernelEvents::TERMINATE => 'onKernelTerminate';
+        yield ConsoleEvents::TERMINATE => 'onConsoleTerminate';
     }
 
     /**
@@ -112,26 +131,38 @@ class MappingListener {
      * @throws DBALException
      */
     protected function initialize(): void {
-        if (!$this->initialized) {
-            $this->registeredEnumTypes += $this->cache->get('enum_types', function(ItemInterface $item, &$save) {
+        if (!$this->initialized && $this->enableEnumTypes) {
+            $this->registeredEnumTypes = $this->cache->get('enum_types', function(ItemInterface $item, &$save) {
                 $save = false;
                 return [];
             });
             $this->initialized = true;
-            $platforms = [];
-            /** @var Connection $connection */
-            foreach ($this->doctrineRegistry->getConnections() as $connection) {
-                $platform = $connection->getDatabasePlatform();
-                if ($platform !== null) {
-                    $platforms[$platform->getName()] = $platform;
+            if ($this->registeredEnumTypes) {
+                $platforms = [];
+                /** @var Connection $connection */
+                foreach ($this->doctrineRegistry->getConnections() as $connection) {
+                    $platform = $connection->getDatabasePlatform();
+                    if ($platform !== null) {
+                        $platforms[$platform->getName()] = $platform;
+                    }
                 }
-            }
-            /** @var PhpEnumType $type */
-            foreach ($this->registeredEnumTypes as $dbalTypeName => $type) {
-                if (!PhpEnumType::hasType($dbalTypeName)) {
-                    call_user_func(get_class($type).'::registerEnumType', $dbalTypeName, null, $type->isUseKey());
-                    foreach ($platforms as $platform) {
-                        $platform->markDoctrineTypeCommented($dbalTypeName);
+                /** @var PhpEnumType $type */
+                foreach ($this->registeredEnumTypes as $dbalTypeName => $type) {
+                    if (!PhpEnumType::hasType($dbalTypeName)) {
+                        call_user_func(get_class($type).'::registerEnumType', $dbalTypeName, null, $type->isUseKey());
+                        foreach ($platforms as $platform) {
+                            $platform->markDoctrineTypeCommented($dbalTypeName);
+                        }
+                    }
+                }
+            } else {
+                // clear metadata cache if no enum types found
+                foreach ($this->doctrineRegistry->getManagers() as $manager) {
+                    if ($manager instanceof EntityManagerInterface) {
+                        $metadataCache = $manager->getConfiguration()->getMetadataCache();
+                        if ($metadataCache !== null) {
+                            $metadataCache->clear();
+                        }
                     }
                 }
             }
@@ -167,18 +198,19 @@ class MappingListener {
         if (\in_array($classMetadata->getName(), $this->slcEntityNames, true)) {
             $classMetadata->enableCache(['usage' => ClassMetadata::CACHE_USAGE_NONSTRICT_READ_WRITE, 'region' => 'user']);
         }
+        if ($this->enableEnumTypes) {
+            // dynamically register enums from schema
+            $platform = $eventArgs->getEntityManager()->getConnection()->getDatabasePlatform();
 
-        // dynamically register enums from schema
-        $platform = $eventArgs->getEntityManager()->getConnection()->getDatabasePlatform();
-
-        foreach ($classMetadata->getFieldNames() as $fieldName) {
-            $dbalType = $classMetadata->getTypeOfField($fieldName);
-            if ($dbalType !== null) {
-                $fieldMapping = $classMetadata->getFieldMapping($fieldName);
-                $this->registerDbalType($dbalType, !empty($fieldMapping['options']['useKey']), $platform);
+            foreach ($classMetadata->getFieldNames() as $fieldName) {
+                $dbalType = $classMetadata->getTypeOfField($fieldName);
+                if ($dbalType !== null) {
+                    $fieldMapping = $classMetadata->getFieldMapping($fieldName);
+                    $this->registerDbalType($dbalType, !empty($fieldMapping['options']['useKey']), $platform);
+                }
             }
+            $this->updateCache();
         }
-        $this->updateCache();
     }
 
     /**
@@ -237,5 +269,12 @@ class MappingListener {
         if (NULL !== $manager = $this->managerRegistry->getManagerForClass($entity)) {
             $manager->injectDependency($entity);
         }
+    }
+
+    /**
+     * @param bool $enableEnumTypes
+     */
+    public function setEnableEnumTypes(bool $enableEnumTypes): void {
+        $this->enableEnumTypes = $enableEnumTypes;
     }
 }

@@ -4,7 +4,7 @@ namespace LazyBundle\DependencyInjection;
 
 use LazyBundle\Command\DeployFtpCommand;
 use LazyBundle\DataCollector\CacheProviderDataCollector;
-use LazyBundle\EventListener\MappingListener;
+use LazyBundle\EventSubscriber\DoctrineMappingEventSubscriber;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\Extension;
@@ -81,7 +81,10 @@ class LazyExtension extends Extension implements PrependExtensionInterface {
         $loader = new Loader\YamlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
         $loader->load('services.yaml');
         $config = $this->getConfig($container);
-        $container->getDefinition(MappingListener::class)->addMethodCall('setSlcEntityNames', [$config['second_level_cache']['entity_names']]);
+        $container->getDefinition(DoctrineMappingEventSubscriber::class)
+            ->addMethodCall('setSlcEntityNames', [$config['second_level_cache']['entity_names']])
+            ->addMethodCall('setEnableEnumTypes', [$config['enable_doctrine_enum_types']]);
+
         $container->getDefinition(DeployFtpCommand::class)->addMethodCall('setConfig', [$config['deploy_ftp']]);
         $container->getDefinition(CacheProviderDataCollector::class)->setArgument(0, $this->defaultCacheProvider);
     }
