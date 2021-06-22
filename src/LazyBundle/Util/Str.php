@@ -11,7 +11,7 @@
 
 namespace LazyBundle\Util;
 
-use Doctrine\Common\Inflector\Inflector;
+use Doctrine\Inflector\Inflector;
 use Symfony\Component\DependencyInjection\Container;
 
 /**
@@ -92,7 +92,7 @@ final class Str {
 
     public static function asSnakeCase(string $value): string {
         $value = static::unaccent(trim($value));
-        $value = preg_replace('/[^a-zA-Z0-9_]/', '_', $value);
+        $value = preg_replace('/[^\w_]/', '_', $value);
         $value = preg_replace('/_{2,}/', '_', $value);
         $value = strtolower($value);
 
