@@ -40,6 +40,7 @@ class Configuration implements ConfigurationInterface
                 ->end()
             ->end()
             ->scalarNode('default_cache_provider')->defaultValue('%env(default::CACHE_PROVIDER)%')->end()
+            ->scalarNode('session_handler')->defaultValue('%env(default::SESSION_HANDLER)%')->end()
         ;
 
         $cronNode = $rootNode

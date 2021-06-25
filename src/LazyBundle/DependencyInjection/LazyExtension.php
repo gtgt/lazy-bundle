@@ -6,7 +6,9 @@ use LazyBundle\Command\DeployFtpCommand;
 use LazyBundle\DataCollector\CacheProviderDataCollector;
 use LazyBundle\EventSubscriber\DoctrineMappingEventSubscriber;
 use Symfony\Component\Config\FileLocator;
+use Symfony\Component\DependencyInjection\ChildDefinition;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Extension\Extension;
 use Symfony\Component\DependencyInjection\Extension\PrependExtensionInterface;
 use Symfony\Component\DependencyInjection\Loader;
@@ -48,6 +50,7 @@ class LazyExtension extends Extension implements PrependExtensionInterface {
             }
         }
         $this->setupCacheProviders($tmpContainer, $config);
+        $this->setupSession($tmpContainer, $config);
 
         foreach (['framework', 'doctrine'] as $extensionName) {
             if ($tmpContainer->hasExtension($extensionName)) {
@@ -56,6 +59,7 @@ class LazyExtension extends Extension implements PrependExtensionInterface {
                 }
             }
         }
+        $container->addDefinitions($tmpContainer->getDefinitions());
     }
 
     /**
@@ -111,6 +115,21 @@ class LazyExtension extends Extension implements PrependExtensionInterface {
                 $container->prependExtensionConfig('framework', ['cache' => $cacheConfig]);
                 $this->defaultCacheProvider = new Reference('cache.'.$defaultCacheProviderConfigName);
             }
+        }
+    }
+    private function setupSession(ContainerBuilder $container, array $config): void {
+        // setup default cache provider for cache.app / cache.system
+        $sessionHandlerDsn = $container->resolveEnvPlaceholders($config['session_handler'], true);
+        if ($sessionHandlerDsn !== null) {
+            if (0 === strpos($sessionHandlerDsn, 'php:')) {
+                $handlerId = null;
+            } else {
+                $definition = new ChildDefinition('session.abstract_handler');
+                $definition->replaceArgument(0, $sessionHandlerDsn);
+                $container->setDefinition('session.lazy_handler', $definition)->setPublic(true);
+                $handlerId = 'session.lazy_handler';
+            }
+            $container->prependExtensionConfig('framework', ['session' => ['handler_id' => $handlerId]]);
         }
     }
 }
