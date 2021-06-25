@@ -9,15 +9,36 @@ use Symfony\Component\HttpFoundation\Response;
 
 class CronDataCollector extends AbstractDataCollector {
     /**
-     * @var array
+     * @var Jobby
      */
     private $jobby;
+
+    /**
+     * @var array
+     */
+    private $jobbyConfig;
+
+    /**
+     * @var array
+     */
+    private $jobbyJobs;
 
     /**
      * @param array $cronConfig
      */
     public function __construct(Jobby $jobby) {
         $this->jobby = $jobby;
+        $this->jobbyConfig = $jobby->getConfig();
+        $this->jobbyJobs = $jobby->getJobs();
+    }
+
+    public function runJob(string $name): ?string {
+        try {
+            $this->jobby->runJob($name);
+        } catch (\Exception $e) {
+            return $e->getMessage();
+        }
+        return null;
     }
 
     /**
@@ -27,9 +48,10 @@ class CronDataCollector extends AbstractDataCollector {
         $jobs = $this->jobby->getJobs();
         $this->data = [
             'jobs' => array_map(function(string $name, array $config) {
-                return [$name, $config['command'], $config['schedule'], $config['enabled'] ? 'true' : 'false',];
+                $nextExecutionTime = $this->jobby->getNextExecutionTime($name);
+                return [$name, $config['command'], $config['schedule'], $nextExecutionTime ? \IntlDateFormatter::formatObject($nextExecutionTime) : '-', $config['enabled'] ? 'true' : 'false'];
             }, array_column($jobs, 0), array_column($jobs, 1)),
-            'columns' => ['name', 'command', 'schedule', 'enabled'],
+            'columns' => ['name', 'command', 'schedule', 'next', 'enabled'],
         ];
     }
 
@@ -54,6 +76,13 @@ class CronDataCollector extends AbstractDataCollector {
     }
 
     public function __sleep() {
-        return ['data'];
+        return ['data', 'jobbyConfig', 'jobbyJobs'];
+    }
+
+    public function __wakeup() {
+        $this->jobby = new \LazyBundle\Util\Jobby($this->jobbyConfig);
+        foreach ($this->jobbyJobs as $job) {
+            $this->jobby->add(...$job);
+        }
     }
 }

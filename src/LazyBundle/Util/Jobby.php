@@ -28,9 +28,16 @@ class Jobby extends BaseJobby {
         ];
     }
 
-    public function run() {
-        $isUnix = ($this->helper->getPlatform() === Helper::UNIX);
+    public function runJob($name): void {
+        $config = $this->getJobConfig($name);
+        if ($this->helper->getPlatform() === Helper::UNIX) {
+            $this->runUnix($name, $config);
+        } else {
+            $this->runWindows($name, $config);
+        }
+    }
 
+    public function run() {
         if ($isUnix && !extension_loaded('posix')) {
             throw new Exception('posix extension is required');
         }
@@ -57,6 +64,25 @@ class Jobby extends BaseJobby {
         }
     }
 
+    public function getJobConfig(string $name): array {
+        foreach ($this->jobs as $config) {
+            [$_name, $_config] = $config;
+            if ($_name === $name) {
+                return $_config;
+            }
+        }
+        throw new \InvalidArgumentException(sprintf('Cron job named %s not found.', $name));
+    }
+
+    public function getNextExecutionTime(string $name): \DateTimeInterface {
+        $jobData = $this->getJobData($name);
+        if ($jobData['nextExecution'] !== null) {
+            return \DateTime::createFromFormat('U', $jobData['nextExecution']);
+        }
+        $config = $this->getJobConfig($name);
+        return (new CronExpression($config['schedule']))->getNextRunDate(new \DateTime('now'));
+    }
+
     /**
      * return the json file with all job info in it. If not exist, we create it add put cron like this :
      * key => nameOfMethodToExecute
@@ -68,7 +94,7 @@ class Jobby extends BaseJobby {
      *
      * @noinspection PhpDocMissingThrowsInspection
      */
-    protected function getJobData($name = null): array {
+    protected function getJobData(string $name = null): array {
         if ($this->cache instanceof CacheItemPoolInterface) {
             /** @noinspection PhpUnhandledExceptionInspection */
             $cacheItem = $this->cache->getItem('cron.data');

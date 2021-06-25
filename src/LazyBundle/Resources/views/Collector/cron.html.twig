@@ -15,12 +15,20 @@
     {{ include('@WebProfiler/Profiler/toolbar_item.html.twig', { link: true }) }}
 {% endblock %}
 
-{#
+
 {% block head %}
-    <!-- Optional. Here you can link to or define your own CSS and JS contents. -->
-    <!-- Use {{ parent() }} to extend the default styles instead of overriding them. -->
+    {{ parent() }}
+    {% if request.query.get('action') == 'run' %}
+        {% set error = collector.runJob(request.query.get('job')) %}
+        <script>
+            {% if error %}
+                alert('{{ error }}');
+            {% endif %}
+            location.href = '{{ url('_profiler', { token: token, panel: panel }) }}';
+        </script>
+    {% endif %}
 {% endblock %}
-#}
+
 {% block menu %}
     <!-- This left-hand menu appears when using the full-screen profiler. -->
     <span class="label">
@@ -52,7 +60,7 @@
                 {% for property in job %}
                 <td style="vertical-align: middle;">{{ property }}</td>
                 {% endfor %}
-                <td><a class="btn btn-sm btn-default">Run</a></td>
+                <td><a class="btn btn-sm btn-default" href="{{ url('_profiler', { token: token, panel: panel, job: job[0], action: 'run' }) }}">Run</a></td>
             </tr>
         {% endfor %}
         </tbody>
