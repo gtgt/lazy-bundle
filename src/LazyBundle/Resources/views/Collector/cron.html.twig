@@ -24,7 +24,7 @@
             {% if error %}
                 alert('{{ error }}');
             {% endif %}
-            location.href = '{{ url('_profiler', { token: token, panel: panel }) }}';
+            location.replace('{{ url('_profiler', { token: token, panel: panel }) }}');
         </script>
     {% endif %}
 {% endblock %}
