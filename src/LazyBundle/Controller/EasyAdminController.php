@@ -43,14 +43,18 @@ class EasyAdminController extends BaseController {
 
     protected function initialize(Request $request) {
         parent::initialize($request);
-        $easyadmin = $this->request->attributes->get('easyadmin');
+        $easyadmin = $request->attributes->get('easyadmin');
+        if (!is_array($easyadmin)) {
+            return;
+        }
         $entity = $easyadmin['item'];
-        if ($entity !== null) {
-            $entityFullyQualifiedClassName = $this->entity['class'];
-            $manager = $this->getManagerRegistry()->getManagerForClass($entityFullyQualifiedClassName);
-            if ($manager instanceof AbstractManager) {
-                $manager->injectDependency($entity);
-            }
+        if ($entity == null) {
+            return null;
+        }
+        $entityFullyQualifiedClassName = $this->entity['class'];
+        $manager = $this->getManagerRegistry()->getManagerForClass($entityFullyQualifiedClassName);
+        if ($manager instanceof AbstractManager) {
+            $manager->injectDependency($entity);
         }
     }
 
