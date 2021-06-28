@@ -6,6 +6,7 @@ use AlterPHP\EasyAdminExtensionBundle\Security\AdminAuthorizationChecker;
 use EasyCorp\Bundle\EasyAdminBundle\Exception\UndefinedEntityException;
 use LazyBundle\Manager\AbstractManager;
 use LazyBundle\Manager\ManagerRegistry;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Annotation\Route;
@@ -40,6 +41,18 @@ class EasyAdminController extends BaseController {
         return \array_merge(parent::getSubscribedServices(), [ManagerRegistry::class]);
     }
 
+    protected function initialize(Request $request) {
+        parent::initialize($request);
+        $easyadmin = $this->request->attributes->get('easyadmin');
+        $entity = $easyadmin['item'];
+        if ($entity !== null) {
+            $entityFullyQualifiedClassName = $this->entity['class'];
+            $manager = $this->getManagerRegistry()->getManagerForClass($entityFullyQualifiedClassName);
+            if ($manager instanceof AbstractManager) {
+                $manager->injectDependency($entity);
+            }
+        }
+    }
 
     /**
      * @param array $backendConfig
