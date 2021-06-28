@@ -38,6 +38,7 @@ class Jobby extends BaseJobby {
     }
 
     public function run() {
+        $isUnix = ($this->helper->getPlatform() === Helper::UNIX);
         if ($isUnix && !extension_loaded('posix')) {
             throw new Exception('posix extension is required');
         }
